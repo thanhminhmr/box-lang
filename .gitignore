@@ -1,0 +1,26 @@
+# Eclipse
+.classpath
+.project
+.settings
+
+# Intellij
+.idea
+*.iml
+*.iws
+
+# VSCode
+.vscode
+
+# ANTLR on VSCode
+.antlr
+
+# Mac
+.DS_Store
+
+# Maven
+log
+target
+build
+
+# Personal
+personal
