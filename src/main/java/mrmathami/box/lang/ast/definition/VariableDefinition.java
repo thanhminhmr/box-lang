@@ -22,9 +22,10 @@ import mrmathami.annotations.Nonnull;
 import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.expression.Expression;
 import mrmathami.box.lang.ast.identifier.VariableIdentifier;
+import mrmathami.box.lang.ast.statement.Statement;
 import mrmathami.box.lang.ast.type.Type;
 
-public final class VariableDefinition implements Definition {
+public final class VariableDefinition implements Definition, Statement {
 	@Nonnull private final Type type;
 	@Nonnull private final VariableIdentifier identifier;
 	@Nullable private final Expression initialValue;

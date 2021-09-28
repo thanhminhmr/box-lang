@@ -16,11 +16,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.access;
+package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.expression.Expression;
 import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.Type;
 

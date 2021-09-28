@@ -19,27 +19,17 @@
 package mrmathami.box.lang.ast.identifier;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.definition.TupleMemberDefinition;
-
-import java.util.Objects;
+import mrmathami.box.lang.ast.definition.MemberDefinition;
 
 public final class MemberIdentifier extends Identifier {
-	@Nullable private TupleMemberDefinition definition;
-
 	public MemberIdentifier(@Nonnull String name) {
 		super(name);
 	}
 
 	@Nonnull
 	@Override
-	public TupleMemberDefinition resolveDefinition() throws InvalidASTException {
-		if (definition != null) return definition;
-		throw new InvalidASTException("Invalid tuple member identifier: definition not found!");
-	}
-
-	public void setDefinition(@Nullable TupleMemberDefinition definition) {
-		this.definition = definition;
+	public MemberDefinition resolveDefinition() throws InvalidASTException {
+		return (MemberDefinition) super.resolveDefinition();
 	}
 }

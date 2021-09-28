@@ -1,5 +1,11 @@
 
-u32[] _hey() {}
+u32[] _hey() {
+	Tuple x = Tuple(3b, 5b);
+	u32[] array = u32:[2i];
+	array[0i] = u32(x.a);
+	array[1i] = u32(x.b);
+	return array;
+}
 
 Tuple(u8 .a, u8 .b); // define tuple Tuple
 Tuple a; // define variable a type
@@ -14,10 +20,12 @@ u32 _fibonacci(u32 $index) {
             : _fibonacci($index - 1i) + _fibonacci($index - 2i);
 }
 
-u32 _fibonacci(u32 $index) {
+u32 _fibonacciLoop(u32 $index) {
     if ($index == 0i) return 0i;
     if ($index == 1i) return 1i;
-    u32 i = 1i, a = 0i, b = 1i;
+    u32 i = 1i;
+    u32 a = 0i;
+    u32 b = 1i;
     loop {
         u32 c = a + b;
         a = b;
@@ -27,10 +35,12 @@ u32 _fibonacci(u32 $index) {
     }
 }
 
-u32[] _fibonacci(u32 $size) {
+u32[] _fibonacciArray(u32 $size) {
     u32[] array = u32:[$size]; // init to zero
     if ($size <= 1i) return array;
-    u32 i = 1i, a = 0i, b = 1i;
+    u32 i = 1i;
+    u32 a = 0i;
+    u32 b = 1i;
     loop {
     	array[i] = b;
     	u32 c = a + b;

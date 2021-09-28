@@ -19,13 +19,10 @@
 package mrmathami.box.lang.ast.identifier;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.ParameterDefinition;
 
 public final class ParameterIdentifier extends Identifier {
-	@Nullable private ParameterDefinition definition;
-
 	public ParameterIdentifier(@Nonnull String name) {
 		super(name);
 	}
@@ -33,11 +30,6 @@ public final class ParameterIdentifier extends Identifier {
 	@Nonnull
 	@Override
 	public ParameterDefinition resolveDefinition() throws InvalidASTException {
-		if (definition != null) return definition;
-		throw new InvalidASTException("Invalid constant identifier: definition not found!");
-	}
-
-	public void setDefinition(@Nullable ParameterDefinition definition) {
-		this.definition = definition;
+		return (ParameterDefinition) super.resolveDefinition();
 	}
 }

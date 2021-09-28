@@ -16,39 +16,37 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.creation;
+package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.box.lang.ast.type.TupleType;
-import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.ast.type.ArrayType;
 
 import java.util.List;
 
-public final class TupleCreationExpression implements Expression {
-	@Nonnull private final TupleType type;
-	@Nonnull private final List<Expression> memberExpressions;
+public final class ArrayCreationExpression implements Expression {
+	@Nonnull private final ArrayType type;
+	@Nonnull private final List<Expression> dimensionExpressions;
 
-	public TupleCreationExpression(@Nonnull TupleType type, @Nonnull List<Expression> memberExpressions) {
+	public ArrayCreationExpression(@Nonnull ArrayType type, @Nonnull List<Expression> dimensionExpressions) {
 		this.type = type;
-		this.memberExpressions = memberExpressions;
+		this.dimensionExpressions = dimensionExpressions;
 	}
 
 	@Nonnull
-	public TupleType getType() {
+	public ArrayType getType() {
 		return type;
 	}
 
 	@Nonnull
-	public List<Expression> getMemberExpressions() {
-		return memberExpressions;
+	public List<Expression> getDimensionExpressions() {
+		return dimensionExpressions;
 	}
 
 	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
-		// todo
+	public ArrayType resolveType() throws InvalidASTException {
+		// TODO
 		return type;
 	}
 }

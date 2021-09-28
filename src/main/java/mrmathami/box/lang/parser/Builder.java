@@ -68,40 +68,39 @@ import mrmathami.box.lang.BoxLangParser.TupleCreationExpressionContext;
 import mrmathami.box.lang.BoxLangParser.TupleDefinitionContext;
 import mrmathami.box.lang.BoxLangParser.TupleTypeContext;
 import mrmathami.box.lang.BoxLangParser.TypeContext;
+import mrmathami.box.lang.BoxLangParser.VariableDefinitionContext;
 import mrmathami.box.lang.BoxLangParser.VariableExpressionContext;
-import mrmathami.box.lang.BoxLangParser.VariableInitializerContext;
-import mrmathami.box.lang.BoxLangParser.VariablesDefinitionContext;
 import mrmathami.box.lang.BoxLangParser.XorExpressionContext;
 import mrmathami.box.lang.BoxLangParser.XorXorExpressionContext;
+import mrmathami.box.lang.ast.AssignmentOperator;
 import mrmathami.box.lang.ast.CompilationUnit;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.definition.ParameterDefinition;
+import mrmathami.box.lang.ast.Keyword;
+import mrmathami.box.lang.ast.Operator;
 import mrmathami.box.lang.ast.definition.Definition;
 import mrmathami.box.lang.ast.definition.FunctionDefinition;
+import mrmathami.box.lang.ast.definition.MemberDefinition;
+import mrmathami.box.lang.ast.definition.ParameterDefinition;
 import mrmathami.box.lang.ast.definition.TupleDefinition;
-import mrmathami.box.lang.ast.definition.TupleMemberDefinition;
 import mrmathami.box.lang.ast.definition.VariableDefinition;
+import mrmathami.box.lang.ast.expression.AccessExpression;
+import mrmathami.box.lang.ast.expression.AccessibleExpression;
+import mrmathami.box.lang.ast.expression.ArrayAccessExpression;
+import mrmathami.box.lang.ast.expression.ArrayCreationExpression;
+import mrmathami.box.lang.ast.expression.AssignableExpression;
 import mrmathami.box.lang.ast.expression.CastExpression;
 import mrmathami.box.lang.ast.expression.ComparisonExpression;
 import mrmathami.box.lang.ast.expression.ConditionalExpression;
 import mrmathami.box.lang.ast.expression.Expression;
+import mrmathami.box.lang.ast.expression.FunctionCallExpression;
 import mrmathami.box.lang.ast.expression.LiteralExpression;
+import mrmathami.box.lang.ast.expression.MemberAccessExpression;
+import mrmathami.box.lang.ast.expression.ParameterExpression;
 import mrmathami.box.lang.ast.expression.ShiftExpression;
 import mrmathami.box.lang.ast.expression.SimpleBinaryExpression;
+import mrmathami.box.lang.ast.expression.TupleCreationExpression;
 import mrmathami.box.lang.ast.expression.UnaryExpression;
-import mrmathami.box.lang.ast.expression.access.AccessExpression;
-import mrmathami.box.lang.ast.expression.access.AccessibleExpression;
-import mrmathami.box.lang.ast.expression.access.ArrayAccessExpression;
-import mrmathami.box.lang.ast.expression.access.AssignableExpression;
-import mrmathami.box.lang.ast.expression.access.FunctionCallExpression;
-import mrmathami.box.lang.ast.expression.access.MemberAccessExpression;
-import mrmathami.box.lang.ast.expression.access.ParameterExpression;
-import mrmathami.box.lang.ast.expression.access.VariableExpression;
-import mrmathami.box.lang.ast.expression.creation.ArrayCreationExpression;
-import mrmathami.box.lang.ast.expression.creation.TupleCreationExpression;
-import mrmathami.box.lang.ast.expression.other.AssignmentOperator;
-import mrmathami.box.lang.ast.expression.other.Keyword;
-import mrmathami.box.lang.ast.expression.other.Operator;
+import mrmathami.box.lang.ast.expression.VariableExpression;
 import mrmathami.box.lang.ast.identifier.FunctionIdentifier;
 import mrmathami.box.lang.ast.identifier.Identifier;
 import mrmathami.box.lang.ast.identifier.MemberIdentifier;
@@ -136,22 +135,117 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import static mrmathami.box.lang.BoxLangParser.AccessibleExpressionContext;
 import static mrmathami.box.lang.BoxLangParser.MemberDefinitionContext;
 import static mrmathami.box.lang.BoxLangParser.ParameterExpressionContext;
 
-public class Builder {
+public class Builder implements AutoCloseable {
 	@Nonnull private static final BigInteger SIGNER_I8 = new BigInteger("-100", 16);
 	@Nonnull private static final BigInteger SIGNER_I16 = new BigInteger("-10000", 16);
 	@Nonnull private static final BigInteger SIGNER_I32 = new BigInteger("-100000000", 16);
 	@Nonnull private static final BigInteger SIGNER_I64 = new BigInteger("-10000000000000000", 16);
 
-	@Nullable private Builder parentBuilder;
+	@Nullable private final Builder parentBuilder;
+
+	@Nonnull private final List<MemberAccessExpression> members;
+
 	@Nonnull private final List<Identifier> identifiers = new ArrayList<>();
+	@Nonnull private final Map<String, Definition> definitions = new HashMap<>();
+
+	public Builder() {
+		this.parentBuilder = null;
+		this.members = new ArrayList<>();
+	}
+
+	private Builder(@Nonnull Builder parentBuilder) {
+		this.parentBuilder = parentBuilder;
+		this.members = parentBuilder.members;
+	}
+
+//	@Nonnull
+//	private static <A, B, C> Pair<A, B> newPair(@Nullable C any) {
+//		return Pair.mutableOf(null, null);
+//	}
+
+	//region resolver
+
+	@Override
+	public void close() throws InvalidASTException {
+		// resolve all identifiers
+		for (final Identifier identifier : identifiers) {
+			final String name = identifier.getName();
+			final Definition definition = lookupDefinition(name);
+			if (definition != null) {
+				identifier.setDefinition(definition);
+			} else if (parentBuilder != null) {
+				parentBuilder.identifiers.add(identifier);
+			} else {
+				throw new InvalidASTException("Unresolved identifier: " + identifier.getName());
+			}
+		}
+		if (parentBuilder == null) {
+			for (final MemberAccessExpression memberAccessExpression : members) {
+				final Type type = memberAccessExpression.getAccessibleExpression().resolveType();
+				if (type instanceof TupleType) {
+					final TupleType tupleType = (TupleType) type;
+					final TupleDefinition definition = tupleType.getIdentifier().resolveDefinition();
+					final MemberIdentifier identifier = memberAccessExpression.getIdentifier();
+					final String name = identifier.getName();
+					final Optional<MemberDefinition> optional = definition.getMembers()
+							.stream()
+							.filter(member -> name.equals(member.getIdentifier().getName()))
+							.findFirst();
+					if (optional.isEmpty()) throw new InvalidASTException("Unresolved identifier: " + name);
+					identifier.setDefinition(optional.get());
+				} else {
+					throw new InvalidASTException("Member access non-tuple type: " + type);
+				}
+			}
+		}
+	}
+
+	@Nullable
+	private Definition lookupDefinition(@Nonnull String name) {
+		final Definition definition = definitions.get(name);
+		assert !(definition instanceof MemberDefinition);
+		return definition != null
+				? definition
+				: parentBuilder != null
+				? parentBuilder.lookupDefinition(name)
+				: null;
+	}
+
+	@Nonnull
+	private <E extends Definition> E newDefinition(@Nonnull String name, @Nonnull E definition)
+			throws InvalidASTException {
+		assert !(definition instanceof MemberDefinition);
+		if (definitions.put(name, definition) == null) {
+			return definition;
+		}
+		throw new InvalidASTException("Redefined definition: " + name);
+	}
+
+	@Nonnull
+	private <E extends Identifier> E newIdentifier(@Nonnull E identifier) {
+		assert !(identifier instanceof MemberIdentifier);
+		identifiers.add(identifier);
+		return identifier;
+	}
+
+	@Nonnull
+	private MemberAccessExpression newMember(@Nonnull MemberAccessExpression member) {
+		members.add(member);
+		return member;
+	}
+
+	//endregion resolver
 
 	//region parsed context processor
 
@@ -160,7 +254,7 @@ public class Builder {
 			throws InvalidASTException {
 		final List<Definition> definitions = new ArrayList<>();
 		for (final var definitionContext : context.definition()) {
-			definitions.addAll(definition(definitionContext));
+			definitions.add(definition(definitionContext));
 		}
 		return new CompilationUnit(definitions);
 	}
@@ -168,68 +262,68 @@ public class Builder {
 	//region definition
 
 	@Nonnull
-	private List<? extends Definition> definition(@Nonnull DefinitionContext context)
+	private Definition definition(@Nonnull DefinitionContext context)
 			throws InvalidASTException {
 		final TupleDefinitionContext tupleDefinition = context.tupleDefinition();
-		if (tupleDefinition != null) return List.of(tupleDefinition(tupleDefinition));
-		final VariablesDefinitionContext variablesDefinition = context.variablesDefinition();
-		if (variablesDefinition != null) return variablesDefinition(variablesDefinition);
+		if (tupleDefinition != null) return tupleDefinition(tupleDefinition);
+		final VariableDefinitionContext variableDefinition = context.variableDefinition();
+		if (variableDefinition != null) return variableDefinition(variableDefinition);
 		final FunctionDefinitionContext functionDefinition = context.functionDefinition();
-		if (functionDefinition != null) return List.of(functionDefinition(functionDefinition));
-		// how do we get here?
-		throw new InvalidASTException("Invalid definition: " + context);
+		if (functionDefinition != null) return functionDefinition(functionDefinition);
+		throw up();
 	}
 
 	@Nonnull
-	private List<VariableDefinition> variablesDefinition(@Nonnull VariablesDefinitionContext context)
+	private VariableDefinition variableDefinition(@Nonnull VariableDefinitionContext context)
 			throws InvalidASTException {
 		final Type type = type(context.type());
-		final List<VariableDefinition> definitions = new ArrayList<>();
-		for (final var variableInitializerContext : context.variableInitializer()) {
-			definitions.add(variableDefinition(type, variableInitializerContext));
-		}
-		return definitions;
-	}
-
-	@Nonnull
-	private VariableDefinition variableDefinition(@Nonnull Type type, @Nonnull VariableInitializerContext context)
-			throws InvalidASTException {
-		final VariableIdentifier variableIdentifier = variableIdentifier(context.VariableIdentifier());
+		final VariableIdentifier identifier = variableIdentifier(context.VariableIdentifier());
 		final ExpressionContext expressionContext = context.expression();
 		final Expression expression = expressionContext != null ? expression(expressionContext) : null;
-		return new VariableDefinition(type, variableIdentifier, expression);
+		final VariableDefinition definition = new VariableDefinition(type, identifier, expression);
+		return newDefinition(identifier.getName(), definition);
 	}
 
 	@Nonnull
 	private TupleDefinition tupleDefinition(@Nonnull TupleDefinitionContext context)
 			throws InvalidASTException {
-		final TupleIdentifier identifier = tupleIdentifier(context.TupleIdentifier());
-		final List<TupleMemberDefinition> definitions = new ArrayList<>();
-		for (final var memberDefinitionContext : context.memberDefinition()) {
-			definitions.add(memberDefinition(memberDefinitionContext));
+		try (final Builder builder = new Builder(this)) {
+			final TupleIdentifier identifier = tupleIdentifier(context.TupleIdentifier());
+			final List<MemberDefinition> definitions = new ArrayList<>();
+			for (final var memberDefinitionContext : context.memberDefinition()) {
+				// these members are in the inner scope
+				definitions.add(builder.memberDefinition(memberDefinitionContext));
+			}
+			final TupleDefinition definition = new TupleDefinition(identifier, definitions);
+			return newDefinition(identifier.getName(), definition);
 		}
-		return new TupleDefinition(identifier, definitions);
 	}
 
 	@Nonnull
-	private TupleMemberDefinition memberDefinition(@Nonnull MemberDefinitionContext context)
+	private MemberDefinition memberDefinition(@Nonnull MemberDefinitionContext context)
 			throws InvalidASTException {
 		final Type type = type(context.type());
 		final MemberIdentifier identifier = memberIdentifier(context.MemberIdentifier());
-		return new TupleMemberDefinition(type, identifier);
+		// Note: this does not use newDefinition because member scope is tuple access only
+		return new MemberDefinition(type, identifier);
 	}
 
 	@Nonnull
 	private FunctionDefinition functionDefinition(@Nonnull FunctionDefinitionContext context)
 			throws InvalidASTException {
-		final Type type = type(context.type());
-		final FunctionIdentifier identifier = functionIdentifier(context.FunctionIdentifier());
-		final List<ParameterDefinition> definitions = new ArrayList<>();
-		for (final var parameterDefinitionContext : context.parameterDefinition()) {
-			definitions.add(parameterDefinition(parameterDefinitionContext));
+		try (final Builder builder = new Builder(this)) {
+			final Type type = type(context.type());
+			final FunctionIdentifier identifier = functionIdentifier(context.FunctionIdentifier());
+			final List<ParameterDefinition> definitions = new ArrayList<>();
+			for (final var parameterDefinitionContext : context.parameterDefinition()) {
+				// these parameters are in the inner scope
+				definitions.add(builder.parameterDefinition(parameterDefinitionContext));
+			}
+			// this block is in the inner scope
+			final BlockStatement statement = builder.blockStatement(context.blockStatement());
+			final FunctionDefinition definition = new FunctionDefinition(type, identifier, definitions, statement);
+			return newDefinition(identifier.getName(), definition);
 		}
-		final BlockStatement statement = blockStatement(context.blockStatement());
-		return new FunctionDefinition(type, identifier, definitions, statement);
 	}
 
 	@Nonnull
@@ -237,7 +331,8 @@ public class Builder {
 			throws InvalidASTException {
 		final Type type = type(context.type());
 		final ParameterIdentifier identifier = parameterIdentifier(context.ParameterIdentifier());
-		return new ParameterDefinition(type, identifier);
+		final ParameterDefinition definition = new ParameterDefinition(type, identifier);
+		return newDefinition(identifier.getName(), definition);
 	}
 
 	//endregion definition
@@ -247,31 +342,32 @@ public class Builder {
 	@Nonnull
 	private VariableIdentifier variableIdentifier(@Nonnull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.VariableIdentifier;
-		return new VariableIdentifier(identifier.getText());
+		return newIdentifier(new VariableIdentifier(identifier.getText()));
 	}
 
 	@Nonnull
 	private TupleIdentifier tupleIdentifier(@Nonnull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.TupleIdentifier;
-		return new TupleIdentifier(identifier.getText());
+		return newIdentifier(new TupleIdentifier(identifier.getText()));
 	}
 
 	@Nonnull
 	private MemberIdentifier memberIdentifier(@Nonnull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.MemberIdentifier;
+		// Note: this does not use newIdentifier because member scope is tuple access only
 		return new MemberIdentifier(identifier.getText());
 	}
 
 	@Nonnull
 	private FunctionIdentifier functionIdentifier(@Nonnull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.FunctionIdentifier;
-		return new FunctionIdentifier(identifier.getText());
+		return newIdentifier(new FunctionIdentifier(identifier.getText()));
 	}
 
 	@Nonnull
 	private ParameterIdentifier parameterIdentifier(@Nonnull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.ParameterIdentifier;
-		return new ParameterIdentifier(identifier.getText());
+		return newIdentifier(new ParameterIdentifier(identifier.getText()));
 	}
 
 	//endregion identifier
@@ -287,19 +383,18 @@ public class Builder {
 		if (simpleType != null) return simpleType(simpleType);
 		final TupleTypeContext tupleType = context.tupleType();
 		if (tupleType != null) return tupleType(tupleType);
-		throw new InvalidASTException("Unknown type: " + context);
+		throw up();
 	}
 
 	//region ArrayType
 
 	@Nonnull
-	private Type beforeArrayType(@Nonnull BeforeArrayTypeContext context)
-			throws InvalidASTException {
+	private Type beforeArrayType(@Nonnull BeforeArrayTypeContext context) {
 		final SimpleTypeContext simpleType = context.simpleType();
 		if (simpleType != null) return simpleType(simpleType);
 		final TupleTypeContext tupleType = context.tupleType();
 		if (tupleType != null) return tupleType(tupleType);
-		throw new InvalidASTException("Unknown type: " + context);
+		throw up();
 	}
 
 	@Nonnull
@@ -366,33 +461,45 @@ public class Builder {
 			@Nonnull List<? extends ParserRuleContext> operatorContexts,
 			@Nonnull BiFunction<List<Expression>, Operator, Expression> constructor)
 			throws InvalidASTException {
-		final Deque<Expression> expressions = new ArrayDeque<>();
-		for (final ParserRuleContext expressionContext : expressionContexts) {
-			expressions.add(expression(expressionContext));
-		}
-		final Deque<Operator> operators = new ArrayDeque<>();
-		for (final ParserRuleContext operatorContext : operatorContexts) {
-			operators.add(binaryOperator(operatorContext));
-		}
-		while (true) {
-			assert expressions.size() >= 2 && expressions.size() == operators.size() + 1;
-
-			final List<Expression> operands = new ArrayList<>(expressions.size());
-			operands.add(expressions.poll());
-			operands.add(expressions.poll());
-
-			final Operator operator = operators.poll();
-			assert operator != null && operator.isBinary();
-
-			while (operator.equals(operators.peek())) {
-				operators.poll();
-				operands.add(expressions.poll());
+		assert expressionContexts.size() >= 2 && expressionContexts.size() == operatorContexts.size() + 1;
+		if (expressionContexts.size() == 2) {
+			// this case is much more common
+			final List<Expression> operands = List.of(
+					expression(expressionContexts.get(0)),
+					expression(expressionContexts.get(1))
+			);
+			final Operator operator = binaryOperator(operatorContexts.get(0));
+			return constructor.apply(operands, operator);
+		} else {
+			// this case is less common
+			final Deque<Expression> expressions = new ArrayDeque<>(expressionContexts.size());
+			for (final ParserRuleContext expressionContext : expressionContexts) {
+				expressions.add(expression(expressionContext));
 			}
-			final Expression expression = constructor.apply(operands, operator);
-			if (operators.isEmpty()) return expression;
+			final Deque<Operator> operators = new ArrayDeque<>(operatorContexts.size());
+			for (final ParserRuleContext operatorContext : operatorContexts) {
+				operators.add(binaryOperator(operatorContext));
+			}
+			while (true) {
+				assert expressions.size() >= 2 && expressions.size() == operators.size() + 1;
 
-			assert expressions.size() == operators.size();
-			expressions.push(expression);
+				final List<Expression> operands = new ArrayList<>(expressions.size());
+				operands.add(expressions.poll());
+				operands.add(expressions.poll());
+
+				final Operator operator = operators.poll();
+				assert operator != null && operator.isBinary();
+
+				while (operator.equals(operators.peek())) {
+					operators.poll();
+					operands.add(expressions.poll());
+				}
+				final Expression expression = constructor.apply(operands, operator);
+				if (operators.isEmpty()) return expression;
+
+				assert expressions.size() == operators.size();
+				expressions.push(expression);
+			}
 		}
 	}
 
@@ -568,7 +675,8 @@ public class Builder {
 			throws InvalidASTException {
 		final TerminalNode memberIdentifier = context.MemberIdentifier();
 		if (memberIdentifier != null) {
-			return new MemberAccessExpression(accessibleExpression, memberIdentifier(memberIdentifier));
+			final MemberIdentifier identifier = memberIdentifier(memberIdentifier);
+			return newMember(new MemberAccessExpression(accessibleExpression, identifier));
 		}
 		final List<Expression> expressions = miscExpressionList(context.expressionList());
 		return new ArrayAccessExpression(accessibleExpression, expressions);
@@ -594,7 +702,9 @@ public class Builder {
 		if (variableExpression != null) return variableExpression(variableExpression);
 		final ParameterExpressionContext parameterExpression = context.parameterExpression();
 		if (parameterExpression != null) return parameterExpression(parameterExpression);
-		return functionCallExpression(context.functionCallExpression());
+		final FunctionCallExpressionContext functionCallExpression = context.functionCallExpression();
+		if (functionCallExpression != null) return functionCallExpression(functionCallExpression);
+		throw up();
 	}
 
 	@Nonnull
@@ -602,7 +712,9 @@ public class Builder {
 			throws InvalidASTException {
 		final AccessExpressionContext accessExpression = context.accessExpression();
 		if (accessExpression != null) return accessExpression(accessExpression);
-		return variableExpression(context.variableExpression());
+		final VariableExpressionContext variableExpression = context.variableExpression();
+		if (variableExpression != null) return variableExpression(variableExpression);
+		throw up();
 	}
 
 	//endregion AccessExpression
@@ -678,13 +790,13 @@ public class Builder {
 	//region statement
 
 	@Nonnull
-	private List<? extends Statement> statement(@Nonnull StatementContext context)
+	private Statement statement(@Nonnull StatementContext context)
 			throws InvalidASTException {
-		final DefinitionContext definition = context.definition();
-		if (definition != null) return definition(definition);
+		final VariableDefinitionContext variableDefinition = context.variableDefinition();
+		if (variableDefinition != null) return variableDefinition(variableDefinition);
 		final SingleStatementContext singleStatement = context.singleStatement();
-		if (singleStatement != null) return List.of(singleStatement(singleStatement));
-		throw new InvalidASTException("Invalid statement: " + context);
+		if (singleStatement != null) return singleStatement(singleStatement);
+		throw up();
 	}
 
 	@Nonnull
@@ -704,7 +816,9 @@ public class Builder {
 		if (blockStatement != null) return blockStatement(blockStatement);
 		final IfStatementContext ifStatement = context.ifStatement();
 		if (ifStatement != null) return ifStatement(ifStatement);
-		return loopStatement(context.loopStatement());
+		final LoopStatementContext loopStatement = context.loopStatement();
+		if (loopStatement != null) return loopStatement(loopStatement);
+		throw up();
 	}
 
 	@Nonnull
@@ -750,11 +864,14 @@ public class Builder {
 	@Nonnull
 	private BlockStatement blockStatement(@Nonnull BlockStatementContext context)
 			throws InvalidASTException {
-		final List<Statement> statements = new ArrayList<>();
-		for (final var statementContext : context.statement()) {
-			statements.addAll(statement(statementContext));
+		try (final Builder builder = new Builder(this)) {
+			final List<Statement> statements = new ArrayList<>();
+			for (final var statementContext : context.statement()) {
+				// these statements are in the inner scope
+				statements.add(builder.statement(statementContext));
+			}
+			return new BlockStatement(statements);
 		}
-		return new BlockStatement(statements);
 	}
 
 	@Nonnull
@@ -915,8 +1032,10 @@ public class Builder {
 //
 //		System.out.println(tree);
 
-		final Builder builder = new Builder();
-		final CompilationUnit compilationUnit = builder.compilationUnit(parser.compilationUnit());
+		final CompilationUnit compilationUnit;
+		try (final Builder builder = new Builder()) {
+			compilationUnit = builder.compilationUnit(parser.compilationUnit());
+		}
 		System.out.println(compilationUnit);
 	}
 }

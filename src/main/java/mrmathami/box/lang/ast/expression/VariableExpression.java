@@ -16,24 +16,28 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.other;
+package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
+import mrmathami.box.lang.ast.InvalidASTException;
+import mrmathami.box.lang.ast.identifier.VariableIdentifier;
+import mrmathami.box.lang.ast.type.Type;
 
-public enum Keyword {
-	TRUE("true"),
-	FALSE("false"),
-	NULL("null");
+public final class VariableExpression implements AccessibleExpression, AssignableExpression {
+	@Nonnull private final VariableIdentifier identifier;
 
-	@Nonnull private final String string;
-
-	Keyword(@Nonnull String string) {
-		this.string = string;
+	public VariableExpression(@Nonnull VariableIdentifier identifier) {
+		this.identifier = identifier;
 	}
 
 	@Nonnull
 	@Override
-	public final String toString() {
-		return string;
+	public Type resolveType() throws InvalidASTException {
+		return identifier.resolveDefinition().getType();
+	}
+
+	@Nonnull
+	public VariableIdentifier getIdentifier() {
+		return identifier;
 	}
 }

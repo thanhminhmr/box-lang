@@ -18,7 +18,22 @@
 
 package mrmathami.box.lang.ast;
 
-import java.io.Serializable;
+import mrmathami.annotations.Nonnull;
 
-public interface ASTNode extends Serializable {
+public enum Keyword {
+	TRUE("true"),
+	FALSE("false"),
+	NULL("null");
+
+	@Nonnull private final String string;
+
+	Keyword(@Nonnull String string) {
+		this.string = string;
+	}
+
+	@Nonnull
+	@Override
+	public final String toString() {
+		return string;
+	}
 }

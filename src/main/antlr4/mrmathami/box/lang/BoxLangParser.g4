@@ -372,18 +372,10 @@ memberDefinition: type MemberIdentifier;
 tupleDefinition:
 	TupleIdentifier '(' (
 		memberDefinition (',' memberDefinition)*
-	)? ')';
+	)? ')' ';';
 
-//region variable definition
-
-variableInitializer: VariableIdentifier ('=' expression)?;
-
-variablesDefinition:
-	type variableInitializer (',' variableInitializer)*;
-
-//endregion variable definition
-
-//region function definition
+variableDefinition:
+	type VariableIdentifier ('=' expression)? ';';
 
 parameterDefinition: type ParameterIdentifier;
 
@@ -392,11 +384,9 @@ functionDefinition:
 		parameterDefinition (',' parameterDefinition)*
 	)? ')' blockStatement;
 
-//endregion function definition
-
 definition:
-	tupleDefinition ';'
-	| variablesDefinition ';'
+	tupleDefinition
+	| variableDefinition
 	| functionDefinition;
 
 //endregion definition
@@ -435,7 +425,7 @@ assignmentStatement:
 
 //endregion assignment statement
 
-blockStatement: '{' (';' | statement)* '}';
+blockStatement: '{' (';' | statement )* '}';
 
 //region if statement
 
@@ -460,7 +450,7 @@ singleStatement:
 	| ifStatement
 	| loopStatement;
 
-statement: singleStatement | definition;
+statement: singleStatement | variableDefinition;
 
 //endregion statement
 

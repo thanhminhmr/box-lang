@@ -16,7 +16,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.other;
+package mrmathami.box.lang.ast;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.annotations.Nullable;

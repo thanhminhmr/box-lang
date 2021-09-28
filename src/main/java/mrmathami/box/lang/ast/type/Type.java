@@ -19,9 +19,8 @@
 package mrmathami.box.lang.ast.type;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.box.lang.ast.ASTNode;
 
-public interface Type extends ASTNode {
+public interface Type {
 	static boolean isNumber(@Nonnull Type type) {
 		return type instanceof SimpleType && ((SimpleType) type).isNumber();
 	}

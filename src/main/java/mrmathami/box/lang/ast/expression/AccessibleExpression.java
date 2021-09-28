@@ -16,7 +16,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.access;
+package mrmathami.box.lang.ast.expression;
 
-public interface AccessExpression extends AccessibleExpression, AssignableExpression {
+public interface AccessibleExpression extends Expression {
 }

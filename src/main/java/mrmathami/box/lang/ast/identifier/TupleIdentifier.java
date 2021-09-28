@@ -19,15 +19,10 @@
 package mrmathami.box.lang.ast.identifier;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.TupleDefinition;
 
-import java.util.Objects;
-
 public final class TupleIdentifier extends Identifier {
-	@Nullable private TupleDefinition definition;
-
 	public TupleIdentifier(@Nonnull String name) {
 		super(name);
 	}
@@ -35,11 +30,6 @@ public final class TupleIdentifier extends Identifier {
 	@Nonnull
 	@Override
 	public TupleDefinition resolveDefinition() throws InvalidASTException {
-		if (definition != null) return definition;
-		throw new InvalidASTException("Invalid tuple identifier: definition not found!");
-	}
-
-	public void setDefinition(@Nullable TupleDefinition definition) {
-		this.definition = definition;
+		return (TupleDefinition) super.resolveDefinition();
 	}
 }

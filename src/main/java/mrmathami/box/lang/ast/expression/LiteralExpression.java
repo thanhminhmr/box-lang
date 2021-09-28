@@ -20,15 +20,11 @@ package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.annotations.Nullable;
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.box.lang.ast.expression.other.Keyword;
+import mrmathami.box.lang.ast.Keyword;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.Type;
 
-import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.Objects;
 
 public final class LiteralExpression implements Expression {
 	@Nonnull private final SimpleType type;

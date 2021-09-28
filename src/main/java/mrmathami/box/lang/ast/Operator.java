@@ -16,10 +16,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.other;
+package mrmathami.box.lang.ast;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 
 import java.util.List;
 
@@ -50,12 +49,12 @@ public enum Operator {
 	LOGIC_XOR("^^", 0b101000), // binary, logical
 	LOGIC_OR("||", 0b101000); // binary, logical
 
-	public static final int MASK_ARITHMETIC = 	0b000001;
-	public static final int MASK_BITWISE = 		0b000010;
-	public static final int MASK_COMPARISON = 	0b000100;
-	public static final int MASK_LOGIC = 		0b001000;
-	public static final int MASK_UNARY = 		0b010000;
-	public static final int MASK_BINARY = 		0b100000;
+	public static final int MASK_ARITHMETIC = 0b000001;
+	public static final int MASK_BITWISE = 0b000010;
+	public static final int MASK_COMPARISON = 0b000100;
+	public static final int MASK_LOGIC = 0b001000;
+	public static final int MASK_UNARY = 0b010000;
+	public static final int MASK_BINARY = 0b100000;
 
 	@Nonnull public static final List<Operator> values = List.of(values());
 

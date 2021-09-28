@@ -20,7 +20,7 @@ package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.expression.other.Operator;
+import mrmathami.box.lang.ast.Operator;
 import mrmathami.box.lang.ast.type.Type;
 
 import java.util.Iterator;

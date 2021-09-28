@@ -19,15 +19,10 @@
 package mrmathami.box.lang.ast.identifier;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.FunctionDefinition;
 
-import java.util.Objects;
-
 public final class FunctionIdentifier extends Identifier {
-	@Nullable private FunctionDefinition definition;
-
 	public FunctionIdentifier(@Nonnull String name) {
 		super(name);
 	}
@@ -35,11 +30,6 @@ public final class FunctionIdentifier extends Identifier {
 	@Nonnull
 	@Override
 	public FunctionDefinition resolveDefinition() throws InvalidASTException {
-		if (definition != null) return definition;
-		throw new InvalidASTException("Invalid function identifier: definition not found!");
-	}
-
-	public void setDefinition(@Nullable FunctionDefinition definition) {
-		this.definition = definition;
+		return (FunctionDefinition) super.resolveDefinition();
 	}
 }

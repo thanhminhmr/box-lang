@@ -16,39 +16,36 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.creation;
+package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.box.lang.ast.type.ArrayType;
+import mrmathami.box.lang.ast.identifier.MemberIdentifier;
 import mrmathami.box.lang.ast.type.Type;
 
-import java.util.List;
+public final class MemberAccessExpression implements AccessExpression {
+	@Nonnull private final AccessibleExpression accessibleExpression;
+	@Nonnull private final MemberIdentifier identifier;
 
-public final class ArrayCreationExpression implements Expression {
-	@Nonnull private final ArrayType type;
-	@Nonnull private final List<Expression> dimensionExpressions;
-
-	public ArrayCreationExpression(@Nonnull ArrayType type, @Nonnull List<Expression> dimensionExpressions) {
-		this.type = type;
-		this.dimensionExpressions = dimensionExpressions;
-	}
-
-	@Nonnull
-	public ArrayType getType() {
-		return type;
-	}
-
-	@Nonnull
-	public List<Expression> getDimensionExpressions() {
-		return dimensionExpressions;
+	public MemberAccessExpression(@Nonnull AccessibleExpression accessibleExpression,
+			@Nonnull MemberIdentifier identifier) {
+		this.accessibleExpression = accessibleExpression;
+		this.identifier = identifier;
 	}
 
 	@Nonnull
 	@Override
-	public ArrayType resolveType() throws InvalidASTException {
-		// TODO
-		return type;
+	public Type resolveType() throws InvalidASTException {
+		return identifier.resolveDefinition().getType();
+	}
+
+	@Nonnull
+	public AccessibleExpression getAccessibleExpression() {
+		return accessibleExpression;
+	}
+
+	@Nonnull
+	public MemberIdentifier getIdentifier() {
+		return identifier;
 	}
 }

@@ -26,9 +26,9 @@ import java.util.List;
 
 public final class TupleDefinition implements Definition {
 	@Nonnull private final TupleIdentifier identifier;
-	@Nonnull private final List<TupleMemberDefinition> members;
+	@Nonnull private final List<MemberDefinition> members;
 
-	public TupleDefinition(@Nonnull TupleIdentifier identifier, @Nonnull List<TupleMemberDefinition> members) {
+	public TupleDefinition(@Nonnull TupleIdentifier identifier, @Nonnull List<MemberDefinition> members) {
 		this.identifier = identifier;
 		this.members = members;
 	}
@@ -40,7 +40,7 @@ public final class TupleDefinition implements Definition {
 	}
 
 	@Nonnull
-	public List<TupleMemberDefinition> getMembers() {
+	public List<MemberDefinition> getMembers() {
 		return Collections.unmodifiableList(members);
 	}
 }

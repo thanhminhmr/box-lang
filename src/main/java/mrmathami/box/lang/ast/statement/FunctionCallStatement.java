@@ -19,7 +19,7 @@
 package mrmathami.box.lang.ast.statement;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.box.lang.ast.expression.access.FunctionCallExpression;
+import mrmathami.box.lang.ast.expression.FunctionCallExpression;
 
 public final class FunctionCallStatement implements SingleStatement {
 	@Nonnull private final FunctionCallExpression functionCallExpression;

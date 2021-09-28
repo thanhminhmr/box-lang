@@ -19,15 +19,10 @@
 package mrmathami.box.lang.ast.identifier;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.VariableDefinition;
 
-import java.util.Objects;
-
 public final class VariableIdentifier extends Identifier {
-	@Nullable private VariableDefinition definition;
-
 	public VariableIdentifier(@Nonnull String name) {
 		super(name);
 	}
@@ -35,11 +30,6 @@ public final class VariableIdentifier extends Identifier {
 	@Nonnull
 	@Override
 	public VariableDefinition resolveDefinition() throws InvalidASTException {
-		if (definition != null) return definition;
-		throw new InvalidASTException("Invalid variable identifier: definition not found!");
-	}
-
-	public void setDefinition(@Nonnull VariableDefinition definition) {
-		this.definition = definition;
+		return (VariableDefinition) super.resolveDefinition();
 	}
 }

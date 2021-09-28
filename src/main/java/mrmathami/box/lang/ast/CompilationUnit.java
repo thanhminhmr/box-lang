@@ -24,7 +24,7 @@ import mrmathami.box.lang.ast.definition.Definition;
 import java.util.Collections;
 import java.util.List;
 
-public final class CompilationUnit implements ASTNode {
+public final class CompilationUnit {
 	public CompilationUnit(@Nonnull List<Definition> definitions) {
 		this.definitions = definitions;
 	}

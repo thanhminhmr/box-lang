@@ -16,28 +16,29 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.access;
+package mrmathami.box.lang.ast.definition;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.identifier.VariableIdentifier;
+import mrmathami.box.lang.ast.identifier.MemberIdentifier;
 import mrmathami.box.lang.ast.type.Type;
 
-public final class VariableExpression implements AccessibleExpression, AssignableExpression {
-	@Nonnull private final VariableIdentifier identifier;
+public final class MemberDefinition implements Definition {
+	@Nonnull private final Type type;
+	@Nonnull private final MemberIdentifier identifier;
 
-	public VariableExpression(@Nonnull VariableIdentifier identifier) {
+	public MemberDefinition(@Nonnull Type type, @Nonnull MemberIdentifier identifier) {
+		this.type = type;
 		this.identifier = identifier;
 	}
 
 	@Nonnull
-	@Override
-	public Type resolveType() throws InvalidASTException {
-		return identifier.resolveDefinition().getType();
+	public Type getType() {
+		return type;
 	}
 
 	@Nonnull
-	public VariableIdentifier getIdentifier() {
+	@Override
+	public MemberIdentifier getIdentifier() {
 		return identifier;
 	}
 }

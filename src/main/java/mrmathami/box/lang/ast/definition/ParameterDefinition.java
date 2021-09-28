@@ -19,8 +19,6 @@
 package mrmathami.box.lang.ast.definition;
 
 import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
-import mrmathami.box.lang.ast.expression.Expression;
 import mrmathami.box.lang.ast.identifier.ParameterIdentifier;
 import mrmathami.box.lang.ast.type.Type;
 

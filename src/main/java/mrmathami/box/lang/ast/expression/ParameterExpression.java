@@ -16,43 +16,28 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.access;
+package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.definition.FunctionDefinition;
-import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.box.lang.ast.identifier.FunctionIdentifier;
+import mrmathami.box.lang.ast.identifier.ParameterIdentifier;
 import mrmathami.box.lang.ast.type.Type;
 
-import java.util.List;
+public final class ParameterExpression implements AccessibleExpression {
+	@Nonnull private final ParameterIdentifier identifier;
 
-public final class FunctionCallExpression implements AccessibleExpression {
-	@Nonnull private final FunctionIdentifier identifier;
-	@Nonnull private final List<Expression> arguments;
-
-	public FunctionCallExpression(@Nonnull FunctionIdentifier identifier, @Nonnull List<Expression> arguments) {
+	public ParameterExpression(@Nonnull ParameterIdentifier identifier) {
 		this.identifier = identifier;
-		this.arguments = arguments;
 	}
 
 	@Nonnull
 	@Override
 	public Type resolveType() throws InvalidASTException {
-		final FunctionDefinition definition = identifier.resolveDefinition();
-		if (definition.getParameters().size() != arguments.size()) {
-			throw new InvalidASTException("Invalid function call expression: wrong number of parameters!");
-		}
-		return definition.getReturnType();
+		return identifier.resolveDefinition().getType();
 	}
 
 	@Nonnull
-	public FunctionIdentifier getIdentifier() {
+	public ParameterIdentifier getIdentifier() {
 		return identifier;
-	}
-
-	@Nonnull
-	public List<Expression> getArguments() {
-		return arguments;
 	}
 }

@@ -16,28 +16,38 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression.access;
+package mrmathami.box.lang.ast.expression;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.identifier.ParameterIdentifier;
+import mrmathami.box.lang.ast.type.TupleType;
 import mrmathami.box.lang.ast.type.Type;
 
-public final class ParameterExpression implements AccessibleExpression {
-	@Nonnull private final ParameterIdentifier identifier;
+import java.util.List;
 
-	public ParameterExpression(@Nonnull ParameterIdentifier identifier) {
-		this.identifier = identifier;
+public final class TupleCreationExpression implements Expression {
+	@Nonnull private final TupleType type;
+	@Nonnull private final List<Expression> memberExpressions;
+
+	public TupleCreationExpression(@Nonnull TupleType type, @Nonnull List<Expression> memberExpressions) {
+		this.type = type;
+		this.memberExpressions = memberExpressions;
+	}
+
+	@Nonnull
+	public TupleType getType() {
+		return type;
+	}
+
+	@Nonnull
+	public List<Expression> getMemberExpressions() {
+		return memberExpressions;
 	}
 
 	@Nonnull
 	@Override
 	public Type resolveType() throws InvalidASTException {
-		return identifier.resolveDefinition().getType();
-	}
-
-	@Nonnull
-	public ParameterIdentifier getIdentifier() {
-		return identifier;
+		// todo
+		return type;
 	}
 }

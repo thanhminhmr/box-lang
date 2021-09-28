@@ -19,10 +19,9 @@
 package mrmathami.box.lang.ast.statement;
 
 import mrmathami.annotations.Nonnull;
+import mrmathami.box.lang.ast.AssignmentOperator;
+import mrmathami.box.lang.ast.expression.AssignableExpression;
 import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.box.lang.ast.expression.access.AccessExpression;
-import mrmathami.box.lang.ast.expression.access.AssignableExpression;
-import mrmathami.box.lang.ast.expression.other.AssignmentOperator;
 
 public final class AssignmentStatement implements SingleStatement {
 	@Nonnull private final AssignableExpression assignableExpression;

@@ -20,9 +20,8 @@ package mrmathami.box.lang.ast.definition;
 
 import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.identifier.Identifier;
-import mrmathami.box.lang.ast.statement.Statement;
 
-public interface Definition extends Statement {
+public interface Definition {
 	@Nonnull
 	Identifier getIdentifier();
 }
