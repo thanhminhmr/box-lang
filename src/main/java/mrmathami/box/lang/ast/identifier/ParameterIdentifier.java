@@ -18,18 +18,18 @@
 
 package mrmathami.box.lang.ast.identifier;
 
-import mrmathami.annotations.Nonnull;
+
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.ParameterDefinition;
+import org.jetbrains.annotations.NotNull;
 
 public final class ParameterIdentifier extends Identifier {
-	public ParameterIdentifier(@Nonnull String name) {
+	public ParameterIdentifier(@NotNull String name) {
 		super(name);
 	}
 
-	@Nonnull
 	@Override
-	public ParameterDefinition resolveDefinition() throws InvalidASTException {
+	public @NotNull ParameterDefinition resolveDefinition() throws InvalidASTException {
 		return (ParameterDefinition) super.resolveDefinition();
 	}
 }

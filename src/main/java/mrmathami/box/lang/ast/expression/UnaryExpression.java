@@ -18,33 +18,43 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
+
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.Operator;
+import mrmathami.box.lang.ast.NormalOperator;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class UnaryExpression implements Expression {
-	@Nonnull private final Operator operator;
-	@Nonnull private final Expression expression;
+	private final @NotNull NormalOperator operator;
+	private final @NotNull Expression expression;
 
-	public UnaryExpression(@Nonnull Operator operator, @Nonnull Expression expression) {
+	public UnaryExpression(@NotNull NormalOperator operator, @NotNull Expression expression) {
 		this.operator = operator;
 		this.expression = expression;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		return expression.resolveType();
 	}
 
-	@Nonnull
-	public Operator getOperator() {
+	public @NotNull NormalOperator getOperator() {
 		return operator;
 	}
 
-	@Nonnull
-	public Expression getExpression() {
+	public @NotNull Expression getExpression() {
 		return expression;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (expression.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

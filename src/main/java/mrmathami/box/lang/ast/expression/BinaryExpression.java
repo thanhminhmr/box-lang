@@ -18,29 +18,31 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.Operator;
+import mrmathami.box.lang.ast.NormalOperator;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.List;
 
 public abstract class BinaryExpression implements Expression {
-	@Nonnull protected final List<Expression> operands;
-	@Nonnull protected final Operator operator;
+	protected final @NotNull List<@NotNull Expression> operands;
+	protected final @NotNull NormalOperator operator;
 
-	BinaryExpression(@Nonnull List<Expression> operands, @Nonnull Operator operator) {
+	BinaryExpression(@NotNull List<@NotNull Expression> operands, @NotNull NormalOperator operator) {
 		assert operands.size() >= 2 && operator.isBinary();
 		this.operands = operands;
 		this.operator = operator;
 	}
 
-	static void sizeCheck(@Nonnull List<Expression> operands) throws InvalidASTException {
+	static void sizeCheck(@NotNull List<@NotNull Expression> operands) throws InvalidASTException {
 		if (operands.size() < 2) throw new InvalidASTException("Invalid binary expression: too few operands.");
 	}
 
-	static Type sameTypeCheck(@Nonnull List<Expression> operands) throws InvalidASTException {
+	static Type sameTypeCheck(@NotNull List<@NotNull Expression> operands) throws InvalidASTException {
 		final Iterator<Expression> iterator = operands.iterator();
 		final Type type = iterator.next().resolveType();
 
@@ -52,13 +54,23 @@ public abstract class BinaryExpression implements Expression {
 		return type;
 	}
 
-	@Nonnull
-	public final List<Expression> getOperands() {
+	public final @NotNull List<@NotNull Expression> getOperands() {
 		return operands;
 	}
 
-	@Nonnull
-	public final Operator getOperator() {
+	public final @NotNull NormalOperator getOperator() {
 		return operator;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		for (final Expression operand : operands) {
+			if (operand.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

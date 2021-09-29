@@ -18,26 +18,27 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class ArrayAccessExpression implements AccessExpression {
-	@Nonnull private final AccessibleExpression accessibleExpression;
-	@Nonnull private final List<Expression> expressions;
+	private final @NotNull AccessibleExpression accessibleExpression;
+	private final @NotNull List<@NotNull Expression> expressions;
 
-	public ArrayAccessExpression(@Nonnull AccessibleExpression accessibleExpression,
-			@Nonnull List<Expression> expressions) {
+	public ArrayAccessExpression(@NotNull AccessibleExpression accessibleExpression,
+			@NotNull List<@NotNull Expression> expressions) {
 		this.accessibleExpression = accessibleExpression;
 		this.expressions = expressions;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		final Type type = accessibleExpression.resolveType();
 		if (!(type instanceof ArrayType)) {
 			throw new InvalidASTException("Invalid array access expression: array access on non array type!");
@@ -49,13 +50,24 @@ public final class ArrayAccessExpression implements AccessExpression {
 		return arrayType.getInnerType();
 	}
 
-	@Nonnull
-	public AccessibleExpression getAccessibleExpression() {
+	public @NotNull AccessibleExpression getAccessibleExpression() {
 		return accessibleExpression;
 	}
 
-	@Nonnull
-	public List<Expression> getExpressions() {
+	public @NotNull List<@NotNull Expression> getExpressions() {
 		return expressions;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (accessibleExpression.visit(visitor)) return true;
+		for (final Expression expression : expressions) {
+			if (expression.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

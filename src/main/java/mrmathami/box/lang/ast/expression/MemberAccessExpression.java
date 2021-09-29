@@ -18,34 +18,44 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.identifier.MemberIdentifier;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class MemberAccessExpression implements AccessExpression {
-	@Nonnull private final AccessibleExpression accessibleExpression;
-	@Nonnull private final MemberIdentifier identifier;
+	private final @NotNull AccessibleExpression accessibleExpression;
+	private final @NotNull MemberIdentifier identifier;
 
-	public MemberAccessExpression(@Nonnull AccessibleExpression accessibleExpression,
-			@Nonnull MemberIdentifier identifier) {
+	public MemberAccessExpression(@NotNull AccessibleExpression accessibleExpression,
+			@NotNull MemberIdentifier identifier) {
 		this.accessibleExpression = accessibleExpression;
 		this.identifier = identifier;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		return identifier.resolveDefinition().getType();
 	}
 
-	@Nonnull
-	public AccessibleExpression getAccessibleExpression() {
+	public @NotNull AccessibleExpression getAccessibleExpression() {
 		return accessibleExpression;
 	}
 
-	@Nonnull
-	public MemberIdentifier getIdentifier() {
+	public @NotNull MemberIdentifier getIdentifier() {
 		return identifier;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (accessibleExpression.visit(visitor)) return true;
+		if (identifier.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

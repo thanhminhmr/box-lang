@@ -18,9 +18,7 @@
 
 package mrmathami.box.lang.ast.identifier;
 
-import mrmathami.annotations.Internal;
-import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
+import mrmathami.box.lang.ast.AstNode;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.Definition;
 import mrmathami.box.lang.ast.definition.FunctionDefinition;
@@ -28,11 +26,14 @@ import mrmathami.box.lang.ast.definition.MemberDefinition;
 import mrmathami.box.lang.ast.definition.ParameterDefinition;
 import mrmathami.box.lang.ast.definition.TupleDefinition;
 import mrmathami.box.lang.ast.definition.VariableDefinition;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public abstract class Identifier {
-	@Nonnull private static final Map<Class<? extends Identifier>, Class<? extends Definition>> CLASS_MAP = Map.of(
+public abstract class Identifier implements AstNode {
+	private static final @NotNull Map<Class<? extends Identifier>, Class<? extends Definition>> CLASS_MAP = Map.of(
 			VariableIdentifier.class, VariableDefinition.class,
 			ParameterIdentifier.class, ParameterDefinition.class,
 			FunctionIdentifier.class, FunctionDefinition.class,
@@ -40,26 +41,24 @@ public abstract class Identifier {
 			TupleIdentifier.class, TupleDefinition.class
 	);
 
-	@Nonnull private final String name;
-	@Nullable private Definition definition;
+	private final @NotNull String name;
+	private @Nullable Definition definition;
 
-	Identifier(@Nonnull String name) {
+	Identifier(@NotNull String name) {
 		this.name = name;
 	}
 
-	@Nonnull
-	public final String getName() {
+	public final @NotNull String getName() {
 		return name;
 	}
 
-	@Nonnull
-	public Definition resolveDefinition() throws InvalidASTException {
+	public @NotNull Definition resolveDefinition() throws InvalidASTException {
 		if (definition != null) return definition;
 		throw new InvalidASTException("Definition not found for identifier " + name);
 	}
 
 	@Internal
-	public final void setDefinition(@Nonnull Definition definition) throws InvalidASTException {
+	public final void setDefinition(@NotNull Definition definition) throws InvalidASTException {
 		if (CLASS_MAP.get(getClass()).isInstance(definition)) {
 			this.definition = definition;
 		} else {

@@ -18,12 +18,13 @@
 
 package mrmathami.box.lang.ast.type;
 
-import mrmathami.annotations.Nonnull;
+import mrmathami.box.lang.ast.AstNode;
+import org.jetbrains.annotations.NotNull;
 
-public interface Type {
-	static boolean isNumber(@Nonnull Type type) {
+public interface Type extends AstNode {
+	static boolean isNumber(@NotNull Type type) {
 		return type instanceof SimpleType && ((SimpleType) type).isNumber();
 	}
 
-	boolean isAssignableFrom(@Nonnull Type type);
+	boolean isAssignableFrom(@NotNull Type type);
 }

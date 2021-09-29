@@ -18,22 +18,21 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.Operator;
+import mrmathami.box.lang.ast.NormalOperator;
 import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.Type;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class ShiftExpression extends BinaryExpression {
-	public ShiftExpression(@Nonnull List<Expression> operands, @Nonnull Operator operator) {
+	public ShiftExpression(@NotNull List<@NotNull Expression> operands, @NotNull NormalOperator operator) {
 		super(operands, operator);
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		final Type firstType = operands.get(0).resolveType();
 		final Type innerType = firstType instanceof ArrayType
 				? ((ArrayType) firstType).getMostInnerType()
@@ -46,6 +45,5 @@ public final class ShiftExpression extends BinaryExpression {
 			throw new InvalidASTException("Invalid shift expression: invalid type of second operand.");
 		}
 		return firstType;
-
 	}
 }

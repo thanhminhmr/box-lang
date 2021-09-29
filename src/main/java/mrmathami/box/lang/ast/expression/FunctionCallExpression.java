@@ -18,26 +18,27 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.FunctionDefinition;
 import mrmathami.box.lang.ast.identifier.FunctionIdentifier;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class FunctionCallExpression implements AccessibleExpression {
-	@Nonnull private final FunctionIdentifier identifier;
-	@Nonnull private final List<Expression> arguments;
+	private final @NotNull FunctionIdentifier identifier;
+	private final @NotNull List<@NotNull Expression> arguments;
 
-	public FunctionCallExpression(@Nonnull FunctionIdentifier identifier, @Nonnull List<Expression> arguments) {
+	public FunctionCallExpression(@NotNull FunctionIdentifier identifier, @NotNull List<@NotNull Expression> arguments) {
 		this.identifier = identifier;
 		this.arguments = arguments;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		final FunctionDefinition definition = identifier.resolveDefinition();
 		if (definition.getParameters().size() != arguments.size()) {
 			throw new InvalidASTException("Invalid function call expression: wrong number of parameters!");
@@ -45,13 +46,24 @@ public final class FunctionCallExpression implements AccessibleExpression {
 		return definition.getReturnType();
 	}
 
-	@Nonnull
-	public FunctionIdentifier getIdentifier() {
+	public @NotNull FunctionIdentifier getIdentifier() {
 		return identifier;
 	}
 
-	@Nonnull
-	public List<Expression> getArguments() {
+	public @NotNull List<@NotNull Expression> getArguments() {
 		return arguments;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (identifier.visit(visitor)) return true;
+		for (final Expression argument : arguments) {
+			if (argument.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

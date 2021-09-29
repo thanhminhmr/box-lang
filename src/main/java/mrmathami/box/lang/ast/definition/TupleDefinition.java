@@ -18,29 +18,44 @@
 
 package mrmathami.box.lang.ast.definition;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.identifier.TupleIdentifier;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
 
-public final class TupleDefinition implements Definition {
-	@Nonnull private final TupleIdentifier identifier;
-	@Nonnull private final List<MemberDefinition> members;
+public final class TupleDefinition implements GlobalDefinition {
+	private final @NotNull TupleIdentifier identifier;
+	private final @NotNull List<@NotNull MemberDefinition> members;
 
-	public TupleDefinition(@Nonnull TupleIdentifier identifier, @Nonnull List<MemberDefinition> members) {
+	public TupleDefinition(@NotNull TupleIdentifier identifier, @NotNull List<@NotNull MemberDefinition> members) {
 		this.identifier = identifier;
 		this.members = members;
 	}
 
-	@Nonnull
 	@Override
-	public TupleIdentifier getIdentifier() {
+	public @NotNull TupleIdentifier getIdentifier() {
 		return identifier;
 	}
 
-	@Nonnull
-	public List<MemberDefinition> getMembers() {
+	@NotNull
+	public List<@NotNull MemberDefinition> getMembers() {
 		return Collections.unmodifiableList(members);
+	}
+
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (identifier.visit(visitor)) return true;
+		for (final MemberDefinition member : members) {
+			if (member.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

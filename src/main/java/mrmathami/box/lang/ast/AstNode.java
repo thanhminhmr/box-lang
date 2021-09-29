@@ -16,20 +16,28 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.identifier;
+package mrmathami.box.lang.ast;
 
-
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.definition.VariableDefinition;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
 import org.jetbrains.annotations.NotNull;
 
-public final class VariableIdentifier extends Identifier {
-	public VariableIdentifier(@NotNull String name) {
-		super(name);
-	}
+import java.io.Serializable;
 
-	@Override
-	public @NotNull VariableDefinition resolveDefinition() throws InvalidASTException {
-		return (VariableDefinition) super.resolveDefinition();
+public interface AstNode extends Serializable {
+	/**
+	 * @param visitor
+	 * 		visitor
+	 *
+	 * @return true if the visitor is aborting, false otherwise
+	 *
+	 * @throws VisitorException
+	 * 		if visitor throw
+	 */
+	default boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		return visitor.leave(this) < 0;
 	}
 }

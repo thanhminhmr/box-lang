@@ -18,10 +18,10 @@
 
 package mrmathami.box.lang.ast.definition;
 
-import mrmathami.annotations.Nonnull;
+import mrmathami.box.lang.ast.AstNode;
 import mrmathami.box.lang.ast.identifier.Identifier;
+import org.jetbrains.annotations.NotNull;
 
-public interface Definition {
-	@Nonnull
-	Identifier getIdentifier();
+public interface Definition extends AstNode {
+	@NotNull Identifier getIdentifier();
 }

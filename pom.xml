@@ -10,9 +10,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>mrmathami</groupId>
-			<artifactId>mrmathami.utils</artifactId>
-			<version>1.0.8</version>
+			<groupId>org.jetbrains</groupId>
+			<artifactId>annotations</artifactId>
+			<version>22.0.0</version>
 		</dependency>
 
 		<dependency>
@@ -20,11 +20,23 @@
 			<artifactId>antlr4-runtime</artifactId>
 			<version>4.9.2</version>
 		</dependency>
+		<!--<dependency>-->
+		<!--	<groupId>org.antlr</groupId>-->
+		<!--	<artifactId>antlr4</artifactId>-->
+		<!--	<version>4.9.2</version>-->
+		<!--	<scope>test</scope>-->
+		<!--</dependency>-->
+
 		<dependency>
-			<groupId>org.antlr</groupId>
-			<artifactId>antlr4</artifactId>
-			<version>4.9.2</version>
-			<scope>test</scope>
+			<groupId>org.eclipse.collections</groupId>
+			<artifactId>eclipse-collections</artifactId>
+			<version>10.4.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.squareup</groupId>
+			<artifactId>javapoet</artifactId>
+			<version>1.13.0</version>
 		</dependency>
 	</dependencies>
 

@@ -18,45 +18,42 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.Keyword;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.Type;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 
 public final class LiteralExpression implements Expression {
-	@Nonnull private final SimpleType type;
-	@Nullable private final BigInteger number;
-	@Nullable private final Keyword keyword;
+	private final @NotNull SimpleType type;
+	private final @Nullable BigInteger number;
+	private final @Nullable Keyword keyword;
 
-	public LiteralExpression(@Nonnull SimpleType type, @Nonnull BigInteger number) {
+	public LiteralExpression(@NotNull SimpleType type, @NotNull BigInteger number) {
 		this.type = type;
 		this.number = number;
 		this.keyword = null;
 	}
 
-	public LiteralExpression(@Nonnull SimpleType type, @Nullable Keyword keyword) {
+	public LiteralExpression(@NotNull SimpleType type, @Nullable Keyword keyword) {
 		this.type = type;
 		this.number = null;
 		this.keyword = keyword;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() {
+	public @NotNull Type resolveType() {
 		return type;
 	}
 
-	@Nonnull
-	public BigInteger getNumber() {
+	public @NotNull BigInteger getNumber() {
 		assert number != null;
 		return number;
 	}
 
-	@Nonnull
-	public Keyword getKeyword() {
+	public @NotNull Keyword getKeyword() {
 		assert keyword != null;
 		return keyword;
 	}

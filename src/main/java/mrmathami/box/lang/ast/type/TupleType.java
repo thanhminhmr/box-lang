@@ -18,26 +18,25 @@
 
 package mrmathami.box.lang.ast.type;
 
-import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.identifier.TupleIdentifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
 public final class TupleType implements Type {
-	@Nonnull private final TupleIdentifier identifier;
+	private final @NotNull TupleIdentifier identifier;
 
-	public TupleType(@Nonnull TupleIdentifier identifier) {
+	public TupleType(@NotNull TupleIdentifier identifier) {
 		this.identifier = identifier;
 	}
 
-	@Nonnull
-	public TupleIdentifier getIdentifier() {
+	public @NotNull TupleIdentifier getIdentifier() {
 		return identifier;
 	}
 
 	@Override
-	public boolean isAssignableFrom(@Nonnull Type type) {
+	public boolean isAssignableFrom(@NotNull Type type) {
 		return equals(type);
 	}
 

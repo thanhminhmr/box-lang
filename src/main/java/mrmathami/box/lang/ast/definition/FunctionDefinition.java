@@ -18,46 +18,59 @@
 
 package mrmathami.box.lang.ast.definition;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.identifier.FunctionIdentifier;
 import mrmathami.box.lang.ast.statement.BlockStatement;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
 
-public final class FunctionDefinition implements Definition {
-	@Nonnull private final Type returnType;
-	@Nonnull private final FunctionIdentifier identifier;
-	@Nonnull private final List<ParameterDefinition> parameters;
-	@Nonnull private final BlockStatement body;
+public final class FunctionDefinition implements GlobalDefinition {
+	private final @NotNull Type returnType;
+	private final @NotNull FunctionIdentifier identifier;
+	private final @NotNull List<@NotNull ParameterDefinition> parameters;
+	private final @NotNull BlockStatement body;
 
-	public FunctionDefinition(@Nonnull Type returnType, @Nonnull FunctionIdentifier identifier,
-			@Nonnull List<ParameterDefinition> parameters, @Nonnull BlockStatement body) {
+	public FunctionDefinition(@NotNull Type returnType, @NotNull FunctionIdentifier identifier,
+			@NotNull List<@NotNull ParameterDefinition> parameters, @NotNull BlockStatement body) {
 		this.returnType = returnType;
 		this.identifier = identifier;
 		this.parameters = parameters;
 		this.body = body;
 	}
 
-	@Nonnull
-	public Type getReturnType() {
+	public @NotNull Type getReturnType() {
 		return returnType;
 	}
 
-	@Nonnull
 	@Override
-	public FunctionIdentifier getIdentifier() {
+	public @NotNull FunctionIdentifier getIdentifier() {
 		return identifier;
 	}
 
-	@Nonnull
-	public List<ParameterDefinition> getParameters() {
+	public @NotNull List<@NotNull ParameterDefinition> getParameters() {
 		return Collections.unmodifiableList(parameters);
 	}
 
-	@Nonnull
-	public BlockStatement getBody() {
+	public @NotNull BlockStatement getBody() {
 		return body;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (returnType.visit(visitor)) return true;
+		if (identifier.visit(visitor)) return true;
+		for (final ParameterDefinition parameter : parameters) {
+			if (parameter.visit(visitor)) return true;
+		}
+		if (body.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

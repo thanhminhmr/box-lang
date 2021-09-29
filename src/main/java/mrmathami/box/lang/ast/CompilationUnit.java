@@ -18,21 +18,34 @@
 
 package mrmathami.box.lang.ast;
 
-import mrmathami.annotations.Nonnull;
-import mrmathami.box.lang.ast.definition.Definition;
+import mrmathami.box.lang.ast.definition.GlobalDefinition;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.List;
 
-public final class CompilationUnit {
-	public CompilationUnit(@Nonnull List<Definition> definitions) {
+public final class CompilationUnit implements AstNode {
+	public CompilationUnit(@NotNull List<@NotNull GlobalDefinition> definitions) {
 		this.definitions = definitions;
 	}
 
-	@Nonnull private final List<Definition> definitions;
+	private final @NotNull List<@NotNull GlobalDefinition> definitions;
 
-	@Nonnull
-	public List<Definition> getDefinitions() {
+	public @NotNull List<@NotNull GlobalDefinition> getDefinitions() {
 		return Collections.unmodifiableList(definitions);
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		for (final GlobalDefinition definition : definitions) {
+			if (definition.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

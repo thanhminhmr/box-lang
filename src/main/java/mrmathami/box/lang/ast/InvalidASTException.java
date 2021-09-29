@@ -18,16 +18,16 @@
 
 package mrmathami.box.lang.ast;
 
-import mrmathami.annotations.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public class InvalidASTException extends Exception {
-	private static final long serialVersionUID = -5998210055475524325L;
+	private static final long serialVersionUID = -1L;
 
-	public InvalidASTException(@Nonnull String message) {
+	public InvalidASTException(@NotNull String message) {
 		super(message);
 	}
 
-	public InvalidASTException(@Nonnull String message, @Nonnull Throwable cause) {
+	public InvalidASTException(@NotNull String message, @NotNull Throwable cause) {
 		super(message, cause);
 	}
 }

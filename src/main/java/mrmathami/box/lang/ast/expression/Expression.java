@@ -18,11 +18,11 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
+import mrmathami.box.lang.ast.AstNode;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.type.Type;
+import org.jetbrains.annotations.NotNull;
 
-public interface Expression {
-	@Nonnull
-	Type resolveType() throws InvalidASTException;
+public interface Expression extends AstNode {
+	@NotNull Type resolveType() throws InvalidASTException;
 }

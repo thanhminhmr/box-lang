@@ -18,22 +18,21 @@
 
 package mrmathami.box.lang.ast;
 
-import mrmathami.annotations.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 public enum Keyword {
 	TRUE("true"),
 	FALSE("false"),
 	NULL("null");
 
-	@Nonnull private final String string;
+	private final @NotNull String string;
 
-	Keyword(@Nonnull String string) {
+	Keyword(@NotNull String string) {
 		this.string = string;
 	}
 
-	@Nonnull
 	@Override
-	public final String toString() {
+	public final @NotNull String toString() {
 		return string;
 	}
 }

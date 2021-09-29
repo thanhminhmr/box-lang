@@ -18,36 +18,48 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.type.TupleType;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class TupleCreationExpression implements Expression {
-	@Nonnull private final TupleType type;
-	@Nonnull private final List<Expression> memberExpressions;
+	private final @NotNull TupleType type;
+	private final @NotNull List<@NotNull Expression> memberExpressions;
 
-	public TupleCreationExpression(@Nonnull TupleType type, @Nonnull List<Expression> memberExpressions) {
+	public TupleCreationExpression(@NotNull TupleType type, @NotNull List<@NotNull Expression> memberExpressions) {
 		this.type = type;
 		this.memberExpressions = memberExpressions;
 	}
 
-	@Nonnull
-	public TupleType getType() {
+	public @NotNull TupleType getType() {
 		return type;
 	}
 
-	@Nonnull
-	public List<Expression> getMemberExpressions() {
+	public @NotNull List<@NotNull Expression> getMemberExpressions() {
 		return memberExpressions;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		// todo
 		return type;
+	}
+	
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (type.visit(visitor)) return true;
+		for (final Expression memberExpression : memberExpressions) {
+			if (memberExpression.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

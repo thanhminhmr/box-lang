@@ -18,28 +18,26 @@
 
 package mrmathami.box.lang.ast.type;
 
-import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Objects;
 
 public final class ArrayType implements Type {
-	@Nonnull private final Type innerType;
-	@Nonnull private final long[] dimensionSizes;
+	private final @NotNull Type innerType;
+	private final long @NotNull [] dimensionSizes;
 
-	public ArrayType(@Nonnull Type innerType, @Nonnull long[] dimensionSizes) {
+	public ArrayType(@NotNull Type innerType, long @NotNull [] dimensionSizes) {
 		this.innerType = innerType;
 		this.dimensionSizes = dimensionSizes;
 	}
 
-	@Nonnull
-	public Type getInnerType() {
+	public @NotNull Type getInnerType() {
 		return innerType;
 	}
 
-	@Nonnull
-	public Type getMostInnerType() {
+	public @NotNull Type getMostInnerType() {
 		return innerType instanceof ArrayType
 				? ((ArrayType) innerType).getMostInnerType()
 				: innerType;
@@ -49,18 +47,17 @@ public final class ArrayType implements Type {
 		return dimensionSizes.length;
 	}
 
-	@Nonnull
-	public long[] getDimensionSizes() {
+	public long @NotNull [] getDimensionSizes() {
 		return dimensionSizes.clone();
 	}
 
 	@Override
-	public String toString() {
+	public @NotNull String toString() {
 		return innerType + Arrays.toString(dimensionSizes);
 	}
 
 	@Override
-	public boolean isAssignableFrom(@Nonnull Type type) {
+	public boolean isAssignableFrom(@NotNull Type type) {
 		if (!(type instanceof ArrayType)) return false;
 		final ArrayType arrayType = (ArrayType) type;
 		final int length = dimensionSizes.length;

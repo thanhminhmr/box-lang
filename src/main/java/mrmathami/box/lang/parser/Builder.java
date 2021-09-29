@@ -18,9 +18,6 @@
 
 package mrmathami.box.lang.parser;
 
-import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
-import mrmathami.annotations.Unsigned;
 import mrmathami.box.lang.BoxLangLexer;
 import mrmathami.box.lang.BoxLangParser;
 import mrmathami.box.lang.BoxLangParser.AccessExpressionContext;
@@ -34,7 +31,13 @@ import mrmathami.box.lang.BoxLangParser.ArraySuffixContext;
 import mrmathami.box.lang.BoxLangParser.ArrayTypeContext;
 import mrmathami.box.lang.BoxLangParser.AssignableExpressionContext;
 import mrmathami.box.lang.BoxLangParser.AssignmentStatementContext;
+import mrmathami.box.lang.BoxLangParser.BeforeAndAndExpressionContext;
+import mrmathami.box.lang.BoxLangParser.BeforeAndExpressionContext;
 import mrmathami.box.lang.BoxLangParser.BeforeArrayTypeContext;
+import mrmathami.box.lang.BoxLangParser.BeforeOrExpressionContext;
+import mrmathami.box.lang.BoxLangParser.BeforeOrOrExpressionContext;
+import mrmathami.box.lang.BoxLangParser.BeforeXorExpressionContext;
+import mrmathami.box.lang.BoxLangParser.BeforeXorXorExpressionContext;
 import mrmathami.box.lang.BoxLangParser.BlockStatementContext;
 import mrmathami.box.lang.BoxLangParser.BreakStatementContext;
 import mrmathami.box.lang.BoxLangParser.CastExpressionContext;
@@ -42,12 +45,12 @@ import mrmathami.box.lang.BoxLangParser.ComparisonExpressionContext;
 import mrmathami.box.lang.BoxLangParser.CompilationUnitContext;
 import mrmathami.box.lang.BoxLangParser.ConditionalExpressionContext;
 import mrmathami.box.lang.BoxLangParser.ContinueStatementContext;
-import mrmathami.box.lang.BoxLangParser.DefinitionContext;
 import mrmathami.box.lang.BoxLangParser.ExpressionContext;
 import mrmathami.box.lang.BoxLangParser.ExpressionListContext;
 import mrmathami.box.lang.BoxLangParser.FunctionCallExpressionContext;
 import mrmathami.box.lang.BoxLangParser.FunctionCallStatementContext;
 import mrmathami.box.lang.BoxLangParser.FunctionDefinitionContext;
+import mrmathami.box.lang.BoxLangParser.GlobalDefinitionContext;
 import mrmathami.box.lang.BoxLangParser.IfStatementContext;
 import mrmathami.box.lang.BoxLangParser.LiteralExpressionContext;
 import mrmathami.box.lang.BoxLangParser.LoopStatementContext;
@@ -76,9 +79,10 @@ import mrmathami.box.lang.ast.AssignmentOperator;
 import mrmathami.box.lang.ast.CompilationUnit;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.Keyword;
-import mrmathami.box.lang.ast.Operator;
+import mrmathami.box.lang.ast.NormalOperator;
 import mrmathami.box.lang.ast.definition.Definition;
 import mrmathami.box.lang.ast.definition.FunctionDefinition;
+import mrmathami.box.lang.ast.definition.GlobalDefinition;
 import mrmathami.box.lang.ast.definition.MemberDefinition;
 import mrmathami.box.lang.ast.definition.ParameterDefinition;
 import mrmathami.box.lang.ast.definition.TupleDefinition;
@@ -121,11 +125,15 @@ import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.TupleType;
 import mrmathami.box.lang.ast.type.Type;
-import mrmathami.utils.Pair;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -134,6 +142,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -147,29 +156,29 @@ import static mrmathami.box.lang.BoxLangParser.MemberDefinitionContext;
 import static mrmathami.box.lang.BoxLangParser.ParameterExpressionContext;
 
 public class Builder implements AutoCloseable {
-	@Nonnull private static final BigInteger SIGNER_I8 = new BigInteger("-100", 16);
-	@Nonnull private static final BigInteger SIGNER_I16 = new BigInteger("-10000", 16);
-	@Nonnull private static final BigInteger SIGNER_I32 = new BigInteger("-100000000", 16);
-	@Nonnull private static final BigInteger SIGNER_I64 = new BigInteger("-10000000000000000", 16);
+	private static final @NotNull BigInteger SIGNER_I8 = new BigInteger("-100", 16);
+	private static final @NotNull BigInteger SIGNER_I16 = new BigInteger("-10000", 16);
+	private static final @NotNull BigInteger SIGNER_I32 = new BigInteger("-100000000", 16);
+	private static final @NotNull BigInteger SIGNER_I64 = new BigInteger("-10000000000000000", 16);
 
-	@Nullable private final Builder parentBuilder;
+	private final @Nullable Builder parentBuilder;
 
-	@Nonnull private final List<MemberAccessExpression> members;
+	private final @NotNull List<@NotNull MemberAccessExpression> members;
 
-	@Nonnull private final List<Identifier> identifiers = new ArrayList<>();
-	@Nonnull private final Map<String, Definition> definitions = new HashMap<>();
+	private final @NotNull List<@NotNull Identifier> identifiers = new ArrayList<>();
+	private final Map<@NotNull String, @NotNull Definition> definitions = new HashMap<>();
 
 	public Builder() {
 		this.parentBuilder = null;
 		this.members = new ArrayList<>();
 	}
 
-	private Builder(@Nonnull Builder parentBuilder) {
+	private Builder(@NotNull Builder parentBuilder) {
 		this.parentBuilder = parentBuilder;
 		this.members = parentBuilder.members;
 	}
 
-//	@Nonnull
+//	@NotNull
 //	private static <A, B, C> Pair<A, B> newPair(@Nullable C any) {
 //		return Pair.mutableOf(null, null);
 //	}
@@ -211,8 +220,7 @@ public class Builder implements AutoCloseable {
 		}
 	}
 
-	@Nullable
-	private Definition lookupDefinition(@Nonnull String name) {
+	private @Nullable Definition lookupDefinition(@NotNull String name) {
 		final Definition definition = definitions.get(name);
 		assert !(definition instanceof MemberDefinition);
 		return definition != null
@@ -222,8 +230,7 @@ public class Builder implements AutoCloseable {
 				: null;
 	}
 
-	@Nonnull
-	private <E extends Definition> E newDefinition(@Nonnull String name, @Nonnull E definition)
+	private <E extends Definition> @NotNull E newDefinition(@NotNull String name, @NotNull E definition)
 			throws InvalidASTException {
 		assert !(definition instanceof MemberDefinition);
 		if (definitions.put(name, definition) == null) {
@@ -232,15 +239,13 @@ public class Builder implements AutoCloseable {
 		throw new InvalidASTException("Redefined definition: " + name);
 	}
 
-	@Nonnull
-	private <E extends Identifier> E newIdentifier(@Nonnull E identifier) {
+	private <E extends Identifier> @NotNull E newIdentifier(@NotNull E identifier) {
 		assert !(identifier instanceof MemberIdentifier);
 		identifiers.add(identifier);
 		return identifier;
 	}
 
-	@Nonnull
-	private MemberAccessExpression newMember(@Nonnull MemberAccessExpression member) {
+	private @NotNull MemberAccessExpression newMember(@NotNull MemberAccessExpression member) {
 		members.add(member);
 		return member;
 	}
@@ -249,20 +254,18 @@ public class Builder implements AutoCloseable {
 
 	//region parsed context processor
 
-	@Nonnull
-	private CompilationUnit compilationUnit(@Nonnull CompilationUnitContext context)
+	private @NotNull CompilationUnit compilationUnit(@NotNull CompilationUnitContext context)
 			throws InvalidASTException {
-		final List<Definition> definitions = new ArrayList<>();
-		for (final var definitionContext : context.definition()) {
-			definitions.add(definition(definitionContext));
+		final List<GlobalDefinition> definitions = new ArrayList<>();
+		for (final var globalDefinitionContext : context.globalDefinition()) {
+			definitions.add(globalDefinition(globalDefinitionContext));
 		}
 		return new CompilationUnit(definitions);
 	}
 
 	//region definition
 
-	@Nonnull
-	private Definition definition(@Nonnull DefinitionContext context)
+	private @NotNull GlobalDefinition globalDefinition(@NotNull GlobalDefinitionContext context)
 			throws InvalidASTException {
 		final TupleDefinitionContext tupleDefinition = context.tupleDefinition();
 		if (tupleDefinition != null) return tupleDefinition(tupleDefinition);
@@ -273,8 +276,7 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private VariableDefinition variableDefinition(@Nonnull VariableDefinitionContext context)
+	private @NotNull VariableDefinition variableDefinition(@NotNull VariableDefinitionContext context)
 			throws InvalidASTException {
 		final Type type = type(context.type());
 		final VariableIdentifier identifier = variableIdentifier(context.VariableIdentifier());
@@ -284,8 +286,7 @@ public class Builder implements AutoCloseable {
 		return newDefinition(identifier.getName(), definition);
 	}
 
-	@Nonnull
-	private TupleDefinition tupleDefinition(@Nonnull TupleDefinitionContext context)
+	private @NotNull TupleDefinition tupleDefinition(@NotNull TupleDefinitionContext context)
 			throws InvalidASTException {
 		try (final Builder builder = new Builder(this)) {
 			final TupleIdentifier identifier = tupleIdentifier(context.TupleIdentifier());
@@ -299,8 +300,7 @@ public class Builder implements AutoCloseable {
 		}
 	}
 
-	@Nonnull
-	private MemberDefinition memberDefinition(@Nonnull MemberDefinitionContext context)
+	private @NotNull MemberDefinition memberDefinition(@NotNull MemberDefinitionContext context)
 			throws InvalidASTException {
 		final Type type = type(context.type());
 		final MemberIdentifier identifier = memberIdentifier(context.MemberIdentifier());
@@ -308,8 +308,7 @@ public class Builder implements AutoCloseable {
 		return new MemberDefinition(type, identifier);
 	}
 
-	@Nonnull
-	private FunctionDefinition functionDefinition(@Nonnull FunctionDefinitionContext context)
+	private @NotNull FunctionDefinition functionDefinition(@NotNull FunctionDefinitionContext context)
 			throws InvalidASTException {
 		try (final Builder builder = new Builder(this)) {
 			final Type type = type(context.type());
@@ -326,8 +325,7 @@ public class Builder implements AutoCloseable {
 		}
 	}
 
-	@Nonnull
-	private ParameterDefinition parameterDefinition(@Nonnull ParameterDefinitionContext context)
+	private @NotNull ParameterDefinition parameterDefinition(@NotNull ParameterDefinitionContext context)
 			throws InvalidASTException {
 		final Type type = type(context.type());
 		final ParameterIdentifier identifier = parameterIdentifier(context.ParameterIdentifier());
@@ -339,33 +337,28 @@ public class Builder implements AutoCloseable {
 
 	//region identifier
 
-	@Nonnull
-	private VariableIdentifier variableIdentifier(@Nonnull TerminalNode identifier) {
+	private @NotNull VariableIdentifier variableIdentifier(@NotNull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.VariableIdentifier;
 		return newIdentifier(new VariableIdentifier(identifier.getText()));
 	}
 
-	@Nonnull
-	private TupleIdentifier tupleIdentifier(@Nonnull TerminalNode identifier) {
+	private @NotNull TupleIdentifier tupleIdentifier(@NotNull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.TupleIdentifier;
 		return newIdentifier(new TupleIdentifier(identifier.getText()));
 	}
 
-	@Nonnull
-	private MemberIdentifier memberIdentifier(@Nonnull TerminalNode identifier) {
+	private @NotNull MemberIdentifier memberIdentifier(@NotNull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.MemberIdentifier;
 		// Note: this does not use newIdentifier because member scope is tuple access only
 		return new MemberIdentifier(identifier.getText());
 	}
 
-	@Nonnull
-	private FunctionIdentifier functionIdentifier(@Nonnull TerminalNode identifier) {
+	private @NotNull FunctionIdentifier functionIdentifier(@NotNull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.FunctionIdentifier;
 		return newIdentifier(new FunctionIdentifier(identifier.getText()));
 	}
 
-	@Nonnull
-	private ParameterIdentifier parameterIdentifier(@Nonnull TerminalNode identifier) {
+	private @NotNull ParameterIdentifier parameterIdentifier(@NotNull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.ParameterIdentifier;
 		return newIdentifier(new ParameterIdentifier(identifier.getText()));
 	}
@@ -374,8 +367,7 @@ public class Builder implements AutoCloseable {
 
 	//region type
 
-	@Nonnull
-	private Type type(@Nonnull TypeContext context)
+	private @NotNull Type type(@NotNull TypeContext context)
 			throws InvalidASTException {
 		final ArrayTypeContext arrayType = context.arrayType();
 		if (arrayType != null) return arrayType(arrayType);
@@ -388,8 +380,7 @@ public class Builder implements AutoCloseable {
 
 	//region ArrayType
 
-	@Nonnull
-	private Type beforeArrayType(@Nonnull BeforeArrayTypeContext context) {
+	private @NotNull Type beforeArrayType(@NotNull BeforeArrayTypeContext context) {
 		final SimpleTypeContext simpleType = context.simpleType();
 		if (simpleType != null) return simpleType(simpleType);
 		final TupleTypeContext tupleType = context.tupleType();
@@ -397,8 +388,7 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private long[] arraySuffix(@Nonnull ArraySuffixContext context)
+	private long @NotNull [] arraySuffix(@NotNull ArraySuffixContext context)
 			throws InvalidASTException {
 		final List<ArraySizeLiteralContext> sizeLiterals = context.arraySizeLiteral();
 		final long[] dimensionSizes = new long[sizeLiterals.size()];
@@ -412,8 +402,7 @@ public class Builder implements AutoCloseable {
 		return dimensionSizes;
 	}
 
-	@Nonnull
-	private Type arrayType(@Nonnull ArrayTypeContext context)
+	private @NotNull Type arrayType(@NotNull ArrayTypeContext context)
 			throws InvalidASTException {
 		Type currentType = beforeArrayType(context.beforeArrayType());
 		for (final ArraySuffixContext arraySuffix : context.arraySuffix()) {
@@ -424,8 +413,7 @@ public class Builder implements AutoCloseable {
 
 	//endregion ArrayType
 
-	@Nonnull
-	private SimpleType simpleType(@Nonnull SimpleTypeContext context) {
+	private @NotNull SimpleType simpleType(@NotNull SimpleTypeContext context) {
 		assert context.getStart() == context.getStop();
 		final String text = context.getText();
 		for (final SimpleType value : SimpleType.values) {
@@ -434,8 +422,7 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private TupleType tupleType(@Nonnull TupleTypeContext tupleType) {
+	private @NotNull TupleType tupleType(@NotNull TupleTypeContext tupleType) {
 		return new TupleType(tupleIdentifier(tupleType.TupleIdentifier()));
 	}
 
@@ -445,21 +432,34 @@ public class Builder implements AutoCloseable {
 
 	//region misc
 
-	@Nonnull
-	private Expression miscSingleBinaryExpression(@Nonnull List<? extends ParserRuleContext> expressionContexts,
-			@Nonnull Operator operator, @Nonnull BiFunction<List<Expression>, Operator, Expression> constructor)
+	private List<Expression> miscExpressionList(@NotNull ExpressionListContext context)
 			throws InvalidASTException {
 		final List<Expression> expressions = new ArrayList<>();
+		for (final ExpressionContext expression : context.expression()) {
+			expressions.add(expression(expression));
+		}
+		return expressions;
+	}
+
+	private <E extends Collection<@NotNull Expression>> @NotNull E miscParseExpressions(@NotNull E expressions,
+			@NotNull List<? extends @NotNull ParserRuleContext> expressionContexts) throws InvalidASTException {
 		for (final ParserRuleContext expressionContext : expressionContexts) {
 			expressions.add(expression(expressionContext));
 		}
-		return constructor.apply(expressions, operator);
+		return expressions;
 	}
 
-	@Nonnull
-	private Expression miscCombinedBinaryExpression(@Nonnull List<? extends ParserRuleContext> expressionContexts,
-			@Nonnull List<? extends ParserRuleContext> operatorContexts,
-			@Nonnull BiFunction<List<Expression>, Operator, Expression> constructor)
+	private void miscParseBinaryOperators(@NotNull Collection<NormalOperator> normalOperators,
+			@NotNull List<? extends @NotNull ParserRuleContext> operatorContexts) {
+		for (final ParserRuleContext expressionContext : operatorContexts) {
+			normalOperators.add(binaryOperator(expressionContext));
+		}
+	}
+
+	private @NotNull Expression miscCombinedBinaryExpression(
+			@NotNull List<? extends ParserRuleContext> expressionContexts,
+			@NotNull List<? extends ParserRuleContext> operatorContexts,
+			@NotNull BiFunction<List<Expression>, NormalOperator, Expression> constructor)
 			throws InvalidASTException {
 		assert expressionContexts.size() >= 2 && expressionContexts.size() == operatorContexts.size() + 1;
 		if (expressionContexts.size() == 2) {
@@ -468,18 +468,16 @@ public class Builder implements AutoCloseable {
 					expression(expressionContexts.get(0)),
 					expression(expressionContexts.get(1))
 			);
-			final Operator operator = binaryOperator(operatorContexts.get(0));
+			final NormalOperator operator = binaryOperator(operatorContexts.get(0));
 			return constructor.apply(operands, operator);
 		} else {
 			// this case is less common
-			final Deque<Expression> expressions = new ArrayDeque<>(expressionContexts.size());
-			for (final ParserRuleContext expressionContext : expressionContexts) {
-				expressions.add(expression(expressionContext));
-			}
-			final Deque<Operator> operators = new ArrayDeque<>(operatorContexts.size());
-			for (final ParserRuleContext operatorContext : operatorContexts) {
-				operators.add(binaryOperator(operatorContext));
-			}
+			final Deque<Expression> expressions = miscParseExpressions(
+					new ArrayDeque<>(expressionContexts.size()), expressionContexts);
+
+			final Deque<NormalOperator> operators = new ArrayDeque<>(operatorContexts.size());
+			miscParseBinaryOperators(operators, operatorContexts);
+
 			while (true) {
 				assert expressions.size() >= 2 && expressions.size() == operators.size() + 1;
 
@@ -487,7 +485,7 @@ public class Builder implements AutoCloseable {
 				operands.add(expressions.poll());
 				operands.add(expressions.poll());
 
-				final Operator operator = operators.poll();
+				final NormalOperator operator = operators.poll();
 				assert operator != null && operator.isBinary();
 
 				while (operator.equals(operators.peek())) {
@@ -503,20 +501,9 @@ public class Builder implements AutoCloseable {
 		}
 	}
 
-	@Nonnull
-	private List<Expression> miscExpressionList(@Nonnull ExpressionListContext context)
-			throws InvalidASTException {
-		final List<Expression> expressions = new ArrayList<>();
-		for (final ExpressionContext expression : context.expression()) {
-			expressions.add(expression(expression));
-		}
-		return expressions;
-	}
-
 	//endregion misc
 
-	@Nonnull
-	private Expression expression(@Nonnull ParserRuleContext context)
+	private @NotNull Expression expression(@NotNull ParserRuleContext context)
 			throws InvalidASTException {
 		final var conditionalExpression = context.getChild(ConditionalExpressionContext.class, 0);
 		if (conditionalExpression != null) return conditionalExpression(conditionalExpression);
@@ -567,8 +554,7 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private Expression conditionalExpression(@Nonnull ConditionalExpressionContext context)
+	private @NotNull Expression conditionalExpression(@NotNull ConditionalExpressionContext context)
 			throws InvalidASTException {
 		final Expression condition = expression(context.beforeConditionalExpression());
 		final Expression trueExpression = expression(context.expression(0));
@@ -576,114 +562,113 @@ public class Builder implements AutoCloseable {
 		return new ConditionalExpression(condition, trueExpression, falseExpression);
 	}
 
-	@Nonnull
-	private Expression orOrExpression(@Nonnull OrOrExpressionContext context)
+	private @NotNull Expression orOrExpression(@NotNull OrOrExpressionContext context)
 			throws InvalidASTException {
-		return miscSingleBinaryExpression(context.beforeOrOrExpression(),
-				Operator.LOGIC_OR, SimpleBinaryExpression::new);
+		final List<BeforeOrOrExpressionContext> expressionContexts = context.beforeOrOrExpression();
+		final List<Expression> expressions = miscParseExpressions(
+				new ArrayList<>(expressionContexts.size()), expressionContexts);
+		return new SimpleBinaryExpression(expressions, NormalOperator.LOGIC_OR);
 	}
 
-	@Nonnull
-	private Expression xorXorExpression(@Nonnull XorXorExpressionContext context)
+	private @NotNull Expression xorXorExpression(@NotNull XorXorExpressionContext context)
 			throws InvalidASTException {
-		return miscSingleBinaryExpression(context.beforeXorXorExpression(),
-				Operator.LOGIC_XOR, SimpleBinaryExpression::new);
+		final List<BeforeXorXorExpressionContext> expressionContexts = context.beforeXorXorExpression();
+		final List<Expression> expressions = miscParseExpressions(
+				new ArrayList<>(expressionContexts.size()), expressionContexts);
+		return new SimpleBinaryExpression(expressions, NormalOperator.LOGIC_XOR);
 	}
 
-	@Nonnull
-	private Expression andAndExpression(@Nonnull AndAndExpressionContext context)
+	private @NotNull Expression andAndExpression(@NotNull AndAndExpressionContext context)
 			throws InvalidASTException {
-		return miscSingleBinaryExpression(context.beforeAndAndExpression(),
-				Operator.LOGIC_AND, SimpleBinaryExpression::new);
+		final List<BeforeAndAndExpressionContext> expressionContexts = context.beforeAndAndExpression();
+		final List<Expression> expressions = miscParseExpressions(
+				new ArrayList<>(expressionContexts.size()), expressionContexts);
+		return new SimpleBinaryExpression(expressions, NormalOperator.LOGIC_AND);
 	}
 
-	@Nonnull
-	private Expression notExpression(@Nonnull NotExpressionContext context)
+	private @NotNull Expression notExpression(@NotNull NotExpressionContext context)
 			throws InvalidASTException {
 		final Expression expression = expression(context.beforeUnaryExpression());
-		return new UnaryExpression(Operator.LOGIC_NOT, expression);
+		return new UnaryExpression(NormalOperator.LOGIC_NOT, expression);
 	}
 
-	@Nonnull
-	private Expression comparisonExpression(@Nonnull ComparisonExpressionContext context)
+	private @NotNull Expression comparisonExpression(@NotNull ComparisonExpressionContext context)
 			throws InvalidASTException {
 		return miscCombinedBinaryExpression(context.beforeComparisonExpression(),
 				context.comparisonOperator(), ComparisonExpression::new);
 	}
 
-	@Nonnull
-	private Expression addExpression(@Nonnull AddExpressionContext context)
+	private @NotNull Expression addExpression(@NotNull AddExpressionContext context)
 			throws InvalidASTException {
 		return miscCombinedBinaryExpression(context.beforeAddExpression(),
 				context.addOperator(), SimpleBinaryExpression::new);
 	}
 
-	@Nonnull
-	private Expression multiplyExpression(@Nonnull MultiplyExpressionContext context)
+	private @NotNull Expression multiplyExpression(@NotNull MultiplyExpressionContext context)
 			throws InvalidASTException {
 		return miscCombinedBinaryExpression(context.beforeMultiplyExpression(),
 				context.multiplyOperator(), SimpleBinaryExpression::new);
 	}
 
-	@Nonnull
-	private Expression signExpression(@Nonnull SignExpressionContext context)
+	private @NotNull Expression signExpression(@NotNull SignExpressionContext context)
 			throws InvalidASTException {
 		final Expression expression = expression(context.beforeUnaryExpression());
 		return new UnaryExpression(unaryOperator(context.signOperator()), expression);
 	}
 
-	@Nonnull
-	private Expression orExpression(@Nonnull OrExpressionContext context)
+	private @NotNull Expression orExpression(@NotNull OrExpressionContext context)
 			throws InvalidASTException {
-		return miscSingleBinaryExpression(context.beforeOrExpression(),
-				Operator.BIT_OR, SimpleBinaryExpression::new);
+		final List<BeforeOrExpressionContext> expressionContexts = context.beforeOrExpression();
+		final List<Expression> expressions = miscParseExpressions(
+				new ArrayList<>(expressionContexts.size()), expressionContexts);
+		return new SimpleBinaryExpression(expressions, NormalOperator.BIT_OR);
 	}
 
-	@Nonnull
-	private Expression xorExpression(@Nonnull XorExpressionContext context)
+	private @NotNull Expression xorExpression(@NotNull XorExpressionContext context)
 			throws InvalidASTException {
-		return miscSingleBinaryExpression(context.beforeXorExpression(),
-				Operator.BIT_XOR, SimpleBinaryExpression::new);
+		final List<BeforeXorExpressionContext> expressionContexts = context.beforeXorExpression();
+		final List<Expression> expressions = miscParseExpressions(
+				new ArrayList<>(expressionContexts.size()), expressionContexts);
+		return new SimpleBinaryExpression(expressions, NormalOperator.BIT_XOR);
 	}
 
-	@Nonnull
-	private Expression andExpression(@Nonnull AndExpressionContext context)
+	private @NotNull Expression andExpression(@NotNull AndExpressionContext context)
 			throws InvalidASTException {
-		return miscSingleBinaryExpression(context.beforeAndExpression(),
-				Operator.BIT_AND, SimpleBinaryExpression::new);
+		final List<BeforeAndExpressionContext> expressionContexts = context.beforeAndExpression();
+		final List<Expression> expressions = miscParseExpressions(
+				new ArrayList<>(expressionContexts.size()), expressionContexts);
+		return new SimpleBinaryExpression(expressions, NormalOperator.BIT_AND);
 	}
 
-	@Nonnull
-	private Expression shiftExpression(@Nonnull ShiftExpressionContext context)
+	private @NotNull Expression shiftExpression(@NotNull ShiftExpressionContext context)
 			throws InvalidASTException {
 		return miscCombinedBinaryExpression(context.beforeShiftExpression(),
 				context.shiftOperator(), ShiftExpression::new);
 	}
 
-	@Nonnull
-	private Expression negativeExpression(@Nonnull NegativeExpressionContext context)
+	private @NotNull Expression negativeExpression(@NotNull NegativeExpressionContext context)
 			throws InvalidASTException {
 		final Expression expression = expression(context.beforeUnaryExpression());
-		return new UnaryExpression(Operator.BIT_NEGATIVE, expression);
+		return new UnaryExpression(NormalOperator.BIT_NEGATIVE, expression);
 	}
 
 	//region AccessExpression
 
-	@Nonnull
-	private AccessExpression miscAccessSuffix(@Nonnull AccessibleExpression accessibleExpression,
-			@Nonnull AccessSuffixContext context)
+	private @NotNull AccessExpression miscAccessSuffix(@NotNull AccessibleExpression accessibleExpression,
+			@NotNull AccessSuffixContext context)
 			throws InvalidASTException {
 		final TerminalNode memberIdentifier = context.MemberIdentifier();
 		if (memberIdentifier != null) {
 			final MemberIdentifier identifier = memberIdentifier(memberIdentifier);
 			return newMember(new MemberAccessExpression(accessibleExpression, identifier));
 		}
-		final List<Expression> expressions = miscExpressionList(context.expressionList());
+		final List<ExpressionContext> expressionContexts = context.expressionList().expression();
+		final List<Expression> expressions = miscParseExpressions(
+				new ArrayList<>(expressionContexts.size()), expressionContexts);
 		return new ArrayAccessExpression(accessibleExpression, expressions);
 	}
 
-	@Nonnull
-	private AccessExpression accessExpression(@Nonnull AccessExpressionContext context)
+	private @NotNull AccessExpression accessExpression(@NotNull AccessExpressionContext context)
 			throws InvalidASTException {
 		final AccessibleExpression accessibleExpression = accessibleExpression(context.accessibleExpression());
 		final Iterator<AccessSuffixContext> iterator = context.accessSuffix().iterator();
@@ -695,8 +680,7 @@ public class Builder implements AutoCloseable {
 		return accessExpression;
 	}
 
-	@Nonnull
-	private AccessibleExpression accessibleExpression(@Nonnull AccessibleExpressionContext context)
+	private @NotNull AccessibleExpression accessibleExpression(@NotNull AccessibleExpressionContext context)
 			throws InvalidASTException {
 		final VariableExpressionContext variableExpression = context.variableExpression();
 		if (variableExpression != null) return variableExpression(variableExpression);
@@ -707,8 +691,7 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private AssignableExpression assignableExpression(@Nonnull AssignableExpressionContext context)
+	private @NotNull AssignableExpression assignableExpression(@NotNull AssignableExpressionContext context)
 			throws InvalidASTException {
 		final AccessExpressionContext accessExpression = context.accessExpression();
 		if (accessExpression != null) return accessExpression(accessExpression);
@@ -719,29 +702,29 @@ public class Builder implements AutoCloseable {
 
 	//endregion AccessExpression
 
-	@Nonnull
-	private VariableExpression variableExpression(@Nonnull VariableExpressionContext context) {
+	private @NotNull VariableExpression variableExpression(@NotNull VariableExpressionContext context) {
 		return new VariableExpression(variableIdentifier(context.VariableIdentifier()));
 	}
 
-	@Nonnull
-	private ParameterExpression parameterExpression(@Nonnull ParameterExpressionContext context) {
+	private @NotNull ParameterExpression parameterExpression(@NotNull ParameterExpressionContext context) {
 		return new ParameterExpression(parameterIdentifier(context.ParameterIdentifier()));
 	}
 
-	@Nonnull
-	private FunctionCallExpression functionCallExpression(@Nonnull FunctionCallExpressionContext context)
+	private @NotNull FunctionCallExpression functionCallExpression(@NotNull FunctionCallExpressionContext context)
 			throws InvalidASTException {
 		final FunctionIdentifier identifier = functionIdentifier(context.FunctionIdentifier());
 		final ExpressionListContext expressionList = context.expressionList();
-		final List<Expression> expressions = expressionList != null
-				? miscExpressionList(expressionList)
-				: List.of();
-		return new FunctionCallExpression(identifier, expressions);
+		if (expressionList != null) {
+			final List<ExpressionContext> expressionContexts = expressionList.expression();
+			final List<Expression> expressions = miscParseExpressions(
+					new ArrayList<>(expressionContexts.size()), expressionContexts);
+			return new FunctionCallExpression(identifier, expressions);
+		} else {
+			return new FunctionCallExpression(identifier, List.of());
+		}
 	}
 
-	@Nonnull
-	private Expression literalExpression(@Nonnull LiteralExpressionContext context)
+	private @NotNull Expression literalExpression(@NotNull LiteralExpressionContext context)
 			throws InvalidASTException {
 		assert context.getStart() == context.getStop();
 		final TerminalNode typedNumberLiteral = context.TypedNumberLiteral();
@@ -752,22 +735,19 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private Expression castExpression(@Nonnull CastExpressionContext context)
+	private @NotNull Expression castExpression(@NotNull CastExpressionContext context)
 			throws InvalidASTException {
 		final SimpleType type = simpleType(context.simpleType());
 		final Expression expression = expression(context.expression());
 		return new CastExpression(type, expression);
 	}
 
-	@Nonnull
-	private Expression parenthesesExpression(@Nonnull ParenthesesExpressionContext context)
+	private @NotNull Expression parenthesesExpression(@NotNull ParenthesesExpressionContext context)
 			throws InvalidASTException {
 		return expression(context.expression());
 	}
 
-	@Nonnull
-	private Expression arrayCreationExpression(@Nonnull ArrayCreationExpressionContext context)
+	private @NotNull Expression arrayCreationExpression(@NotNull ArrayCreationExpressionContext context)
 			throws InvalidASTException {
 		final Type innerType = type(context.type());
 		final List<Expression> expressions = miscExpressionList(context.expressionList());
@@ -777,8 +757,7 @@ public class Builder implements AutoCloseable {
 		return new ArrayCreationExpression(type, expressions);
 	}
 
-	@Nonnull
-	private Expression tupleCreationExpression(@Nonnull TupleCreationExpressionContext context)
+	private @NotNull Expression tupleCreationExpression(@NotNull TupleCreationExpressionContext context)
 			throws InvalidASTException {
 		final TupleType type = tupleType(context.tupleType());
 		final List<Expression> expressions = miscExpressionList(context.expressionList());
@@ -789,8 +768,7 @@ public class Builder implements AutoCloseable {
 
 	//region statement
 
-	@Nonnull
-	private Statement statement(@Nonnull StatementContext context)
+	private @NotNull Statement statement(@NotNull StatementContext context)
 			throws InvalidASTException {
 		final VariableDefinitionContext variableDefinition = context.variableDefinition();
 		if (variableDefinition != null) return variableDefinition(variableDefinition);
@@ -799,8 +777,7 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private SingleStatement singleStatement(@Nonnull SingleStatementContext context)
+	private @NotNull SingleStatement singleStatement(@NotNull SingleStatementContext context)
 			throws InvalidASTException {
 		final FunctionCallStatementContext functionCallStatement = context.functionCallStatement();
 		if (functionCallStatement != null) return functionCallStatement(functionCallStatement);
@@ -821,39 +798,34 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private FunctionCallStatement functionCallStatement(@Nonnull FunctionCallStatementContext context)
+	private @NotNull FunctionCallStatement functionCallStatement(@NotNull FunctionCallStatementContext context)
 			throws InvalidASTException {
 		final FunctionCallExpression expression = functionCallExpression(context.functionCallExpression());
 		return new FunctionCallStatement(expression);
 	}
 
-	@Nonnull
-	private ReturnStatement returnStatement(@Nonnull ReturnStatementContext context)
+	private @NotNull ReturnStatement returnStatement(@NotNull ReturnStatementContext context)
 			throws InvalidASTException {
 		final ExpressionContext expressionContext = context.expression();
 		final Expression expression = expressionContext != null ? expression(expressionContext) : null;
 		return new ReturnStatement(expression);
 	}
 
-	@Nonnull
-	private BreakStatement breakStatement(@Nonnull BreakStatementContext context)
+	private @NotNull BreakStatement breakStatement(@NotNull BreakStatementContext context)
 			throws InvalidASTException {
 		final TerminalNode untypedNumber = context.UntypedNumberLiteral();
 		final long value = untypedNumber != null ? untypedNumber(untypedNumber.getText()) : 0;
 		return new BreakStatement(value);
 	}
 
-	@Nonnull
-	private ContinueStatement continueStatement(@Nonnull ContinueStatementContext context)
+	private @NotNull ContinueStatement continueStatement(@NotNull ContinueStatementContext context)
 			throws InvalidASTException {
 		final TerminalNode untypedNumber = context.UntypedNumberLiteral();
 		final long value = untypedNumber != null ? untypedNumber(untypedNumber.getText()) : 0;
 		return new ContinueStatement(value);
 	}
 
-	@Nonnull
-	private AssignmentStatement assignmentStatement(@Nonnull AssignmentStatementContext context)
+	private @NotNull AssignmentStatement assignmentStatement(@NotNull AssignmentStatementContext context)
 			throws InvalidASTException {
 		final AssignableExpression assignableExpression = assignableExpression(context.assignableExpression());
 		final AssignmentOperator assignmentOperator = assignmentOperator(context.assignmentOperator());
@@ -861,8 +833,7 @@ public class Builder implements AutoCloseable {
 		return new AssignmentStatement(assignableExpression, assignmentOperator, expression);
 	}
 
-	@Nonnull
-	private BlockStatement blockStatement(@Nonnull BlockStatementContext context)
+	private @NotNull BlockStatement blockStatement(@NotNull BlockStatementContext context)
 			throws InvalidASTException {
 		try (final Builder builder = new Builder(this)) {
 			final List<Statement> statements = new ArrayList<>();
@@ -874,8 +845,7 @@ public class Builder implements AutoCloseable {
 		}
 	}
 
-	@Nonnull
-	private IfStatement ifStatement(@Nonnull IfStatementContext context)
+	private @NotNull IfStatement ifStatement(@NotNull IfStatementContext context)
 			throws InvalidASTException {
 		final List<Pair<Expression, SingleStatement>> pairs = new ArrayList<>();
 		for (final var singleCaseContext : context.ifSingleCase()) {
@@ -884,7 +854,7 @@ public class Builder implements AutoCloseable {
 			final SingleStatement statement = statementContext != null
 					? singleStatement(statementContext)
 					: null;
-			pairs.add(Pair.immutableOf(condition, statement));
+			pairs.add(Tuples.pair(condition, statement));
 		}
 		final SingleStatementContext statementContext = context.singleStatement();
 		final SingleStatement alternativeStatement = statementContext != null
@@ -893,8 +863,7 @@ public class Builder implements AutoCloseable {
 		return new IfStatement(pairs, alternativeStatement);
 	}
 
-	@Nonnull
-	private LoopStatement loopStatement(@Nonnull LoopStatementContext context)
+	private @NotNull LoopStatement loopStatement(@NotNull LoopStatementContext context)
 			throws InvalidASTException {
 		final SingleStatementContext singleStatement = context.singleStatement();
 		final SingleStatement statement = singleStatement != null ? singleStatement(singleStatement) : null;
@@ -905,8 +874,7 @@ public class Builder implements AutoCloseable {
 
 	//region misc: number parser
 
-	@Nonnull
-	private static BigInteger parseUntypedNumber(@Nonnull String untypedNumber) {
+	private static @NotNull BigInteger parseUntypedNumber(@NotNull String untypedNumber) {
 		assert untypedNumber.matches("[0-9]+|0x[0-9A-Fa-f]+|0t[0-7]+|0b[01]+");
 		if (untypedNumber.length() >= 3 && untypedNumber.charAt(0) == '0') {
 			if (untypedNumber.charAt(1) == 't') {
@@ -920,8 +888,8 @@ public class Builder implements AutoCloseable {
 		return new BigInteger(untypedNumber, 10);
 	}
 
-	@Unsigned
-	private long untypedNumber(@Nonnull String untypedNumber)
+	@Range(from = 0, to = Long.MAX_VALUE)
+	private long untypedNumber(@NotNull String untypedNumber)
 			throws InvalidASTException {
 		assert untypedNumber.matches("[0-9]+|0x[0-9A-Fa-f]+|0t[0-7]+|0b[01]+");
 		try {
@@ -931,8 +899,7 @@ public class Builder implements AutoCloseable {
 		}
 	}
 
-	@Nonnull
-	private LiteralExpression typedNumber(@Nonnull String typedNumber)
+	private @NotNull LiteralExpression typedNumber(@NotNull String typedNumber)
 			throws InvalidASTException {
 		assert typedNumber.matches("([0-9]+|0x[0-9A-Fa-f]+|0t[0-7]+|0b[01]+)[bsilBSIL]");
 		final int lastIndex = typedNumber.length() - 1;
@@ -978,8 +945,7 @@ public class Builder implements AutoCloseable {
 
 	//region misc: operator parser
 
-	@Nonnull
-	private AssignmentOperator assignmentOperator(@Nonnull ParserRuleContext context) {
+	private @NotNull AssignmentOperator assignmentOperator(@NotNull ParserRuleContext context) {
 		assert context.getStart() == context.getStop();
 		final String text = context.getText();
 		for (final AssignmentOperator value : AssignmentOperator.values) {
@@ -988,21 +954,19 @@ public class Builder implements AutoCloseable {
 		throw up();
 	}
 
-	@Nonnull
-	private Operator unaryOperator(@Nonnull ParserRuleContext context) {
+	private @NotNull NormalOperator unaryOperator(@NotNull ParserRuleContext context) {
 		assert context.getStart() == context.getStop();
 		final String text = context.getText();
-		for (final Operator value : Operator.values) {
+		for (final NormalOperator value : NormalOperator.values) {
 			if (value.isUnary() && value.toString().equals(text)) return value;
 		}
 		throw up();
 	}
 
-	@Nonnull
-	private Operator binaryOperator(@Nonnull ParserRuleContext context) {
+	private @NotNull NormalOperator binaryOperator(@NotNull ParserRuleContext context) {
 		assert context.getStart() == context.getStop();
 		final String text = context.getText();
-		for (final Operator value : Operator.values) {
+		for (final NormalOperator value : NormalOperator.values) {
 			if (value.isBinary() && value.toString().equals(text)) return value;
 		}
 		throw up();
@@ -1017,12 +981,11 @@ public class Builder implements AutoCloseable {
 
 	//endregion
 
-	@Nonnull
-	private static RuntimeException up() {
+	private static @NotNull RuntimeException up() {
 		return new RuntimeException("This should not happen!");
 	}
 
-	public static void main(@Nonnull String[] args) throws IOException, InvalidASTException {
+	public static void main(@NotNull String[] args) throws IOException, InvalidASTException {
 		final String string = Files.readString(Path.of("./test/input.txt"));
 		final BoxLangLexer lexer = new BoxLangLexer(CharStreams.fromString(string));
 

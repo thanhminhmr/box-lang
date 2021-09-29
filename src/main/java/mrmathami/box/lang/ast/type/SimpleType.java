@@ -18,7 +18,7 @@
 
 package mrmathami.box.lang.ast.type;
 
-import mrmathami.annotations.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -34,11 +34,11 @@ public enum SimpleType implements Type {
 	NUMBER_I32("i32"),
 	NUMBER_I64("i64");
 
-	@Nonnull public static final List<SimpleType> values = List.of(values());
+	public static final @NotNull List<@NotNull SimpleType> values = List.of(values());
 
-	@Nonnull private final String string;
+	private final @NotNull String string;
 
-	SimpleType(@Nonnull String string) {
+	SimpleType(@NotNull String string) {
 		this.string = string;
 	}
 
@@ -47,13 +47,12 @@ public enum SimpleType implements Type {
 	}
 
 	@Override
-	public boolean isAssignableFrom(@Nonnull Type type) {
+	public boolean isAssignableFrom(@NotNull Type type) {
 		return this == type;
 	}
 
-	@Nonnull
 	@Override
-	public final String toString() {
+	public final @NotNull String toString() {
 		return string;
 	}
 }

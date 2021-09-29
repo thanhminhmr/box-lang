@@ -18,19 +18,32 @@
 
 package mrmathami.box.lang.ast.statement;
 
-import mrmathami.annotations.Nonnull;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class BlockStatement implements SingleStatement {
-	@Nonnull private final List<Statement> statements;
+	private final @NotNull List<@NotNull Statement> statements;
 
-	public BlockStatement(@Nonnull List<Statement> statements) {
+	public BlockStatement(@NotNull List<@NotNull Statement> statements) {
 		this.statements = statements;
 	}
 
-	@Nonnull
-	public List<Statement> getStatements() {
+	public @NotNull List<@NotNull Statement> getStatements() {
 		return statements;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		for (final Statement statement : statements) {
+			if (statement.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

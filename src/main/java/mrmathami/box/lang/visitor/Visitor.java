@@ -16,20 +16,17 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.identifier;
+package mrmathami.box.lang.visitor;
 
-
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.definition.VariableDefinition;
+import mrmathami.box.lang.ast.AstNode;
 import org.jetbrains.annotations.NotNull;
 
-public final class VariableIdentifier extends Identifier {
-	public VariableIdentifier(@NotNull String name) {
-		super(name);
-	}
+public interface Visitor {
+	int ABORT = -1;
+	int CONTINUE = 0;
+	int SKIP = 1; // only useful when entering a node. When leaving a node, this is equal to CONTINUE
 
-	@Override
-	public @NotNull VariableDefinition resolveDefinition() throws InvalidASTException {
-		return (VariableDefinition) super.resolveDefinition();
-	}
+	int enter(@NotNull AstNode node) throws VisitorException;
+
+	int leave(@NotNull AstNode node) throws VisitorException;
 }

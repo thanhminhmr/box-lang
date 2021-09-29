@@ -18,11 +18,11 @@
 
 package mrmathami.box.lang.ast;
 
-import mrmathami.annotations.Nonnull;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public enum Operator {
+public enum NormalOperator {
 	SIGN_POSITIVE("+", 0b010001), // unary, arithmetic
 	SIGN_NEGATIVE("-", 0b010001), // unary, arithmetic
 	BIT_NEGATIVE("~", 0b010010), // unary, bitwise
@@ -56,19 +56,18 @@ public enum Operator {
 	public static final int MASK_UNARY = 0b010000;
 	public static final int MASK_BINARY = 0b100000;
 
-	@Nonnull public static final List<Operator> values = List.of(values());
+	public static final @NotNull List<@NotNull NormalOperator> values = List.of(values());
 
-	@Nonnull private final String string;
+	private final @NotNull String string;
 	private final int flags;
 
-	Operator(@Nonnull String string, int flags) {
+	NormalOperator(@NotNull String string, int flags) {
 		this.string = string;
 		this.flags = flags;
 	}
 
-	@Nonnull
 	@Override
-	public final String toString() {
+	public final @NotNull String toString() {
 		return string;
 	}
 

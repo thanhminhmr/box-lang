@@ -18,26 +18,36 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.identifier.ParameterIdentifier;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class ParameterExpression implements AccessibleExpression {
-	@Nonnull private final ParameterIdentifier identifier;
+	@NotNull private final ParameterIdentifier identifier;
 
-	public ParameterExpression(@Nonnull ParameterIdentifier identifier) {
+	public ParameterExpression(@NotNull ParameterIdentifier identifier) {
 		this.identifier = identifier;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		return identifier.resolveDefinition().getType();
 	}
 
-	@Nonnull
-	public ParameterIdentifier getIdentifier() {
+	public @NotNull ParameterIdentifier getIdentifier() {
 		return identifier;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (identifier.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

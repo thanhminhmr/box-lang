@@ -18,18 +18,30 @@
 
 package mrmathami.box.lang.ast.statement;
 
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.expression.Expression;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class ReturnStatement implements SingleStatement {
-	@Nullable private final Expression expression;
+	private final @Nullable Expression expression;
 
 	public ReturnStatement(@Nullable Expression expression) {
 		this.expression = expression;
 	}
 
-	@Nullable
-	public Expression getExpression() {
+	public @Nullable Expression getExpression() {
 		return expression;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (expression != null && expression.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

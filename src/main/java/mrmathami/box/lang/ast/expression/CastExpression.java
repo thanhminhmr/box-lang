@@ -18,33 +18,43 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class CastExpression implements Expression {
-	@Nonnull private final SimpleType type;
-	@Nonnull private final Expression expression;
+	private final @NotNull SimpleType type;
+	private final @NotNull Expression expression;
 
-	public CastExpression(@Nonnull SimpleType type, @Nonnull Expression expression) {
+	public CastExpression(@NotNull SimpleType type, @NotNull Expression expression) {
 		this.type = type;
 		this.expression = expression;
 	}
 
-	@Nonnull
-	public SimpleType getType() {
+	public @NotNull SimpleType getType() {
 		return type;
 	}
 
-	@Nonnull
-	public Expression getExpression() {
+	public @NotNull Expression getExpression() {
 		return expression;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() {
+	public @NotNull Type resolveType() {
 		// todo
 		return type;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (type.visit(visitor)) return true;
+		if (expression.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

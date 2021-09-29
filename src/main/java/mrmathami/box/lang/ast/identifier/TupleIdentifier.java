@@ -18,18 +18,18 @@
 
 package mrmathami.box.lang.ast.identifier;
 
-import mrmathami.annotations.Nonnull;
+
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.TupleDefinition;
+import org.jetbrains.annotations.NotNull;
 
 public final class TupleIdentifier extends Identifier {
-	public TupleIdentifier(@Nonnull String name) {
+	public TupleIdentifier(@NotNull String name) {
 		super(name);
 	}
 
-	@Nonnull
 	@Override
-	public TupleDefinition resolveDefinition() throws InvalidASTException {
+	public @NotNull TupleDefinition resolveDefinition() throws InvalidASTException {
 		return (TupleDefinition) super.resolveDefinition();
 	}
 }

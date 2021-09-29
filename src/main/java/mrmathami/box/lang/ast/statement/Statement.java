@@ -18,5 +18,7 @@
 
 package mrmathami.box.lang.ast.statement;
 
-public interface Statement {
+import mrmathami.box.lang.ast.AstNode;
+
+public interface Statement extends AstNode {
 }

@@ -18,17 +18,29 @@
 
 package mrmathami.box.lang.ast.statement;
 
-import mrmathami.annotations.Nullable;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class LoopStatement implements SingleStatement {
-	@Nullable private final SingleStatement statement;
+	private final @Nullable SingleStatement statement;
 
 	public LoopStatement(@Nullable SingleStatement statement) {
 		this.statement = statement;
 	}
 
-	@Nullable
-	public SingleStatement getStatement() {
+	public @Nullable SingleStatement getStatement() {
 		return statement;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (statement != null && statement.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

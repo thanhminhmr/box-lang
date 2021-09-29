@@ -18,18 +18,29 @@
 
 package mrmathami.box.lang.ast.statement;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.expression.FunctionCallExpression;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class FunctionCallStatement implements SingleStatement {
-	@Nonnull private final FunctionCallExpression functionCallExpression;
+	private final @NotNull FunctionCallExpression functionCallExpression;
 
-	public FunctionCallStatement(@Nonnull FunctionCallExpression functionCallExpression) {
+	public FunctionCallStatement(@NotNull FunctionCallExpression functionCallExpression) {
 		this.functionCallExpression = functionCallExpression;
 	}
 
-	@Nonnull
-	public FunctionCallExpression getFunctionCallExpression() {
+	public @NotNull FunctionCallExpression getFunctionCallExpression() {
 		return functionCallExpression;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (functionCallExpression.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

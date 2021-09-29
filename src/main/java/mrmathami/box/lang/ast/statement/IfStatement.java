@@ -18,30 +18,48 @@
 
 package mrmathami.box.lang.ast.statement;
 
-import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
 import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.utils.Pair;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.eclipse.collections.api.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public final class IfStatement implements SingleStatement {
-	@Nonnull private final List<Pair<Expression, SingleStatement>> conditionStatementPairs;
-	@Nullable private final SingleStatement alternativeStatement;
+	private final @NotNull List<@NotNull Pair<@NotNull Expression, @Nullable SingleStatement>> conditionStatementPairs;
+	private final @Nullable SingleStatement alternativeStatement;
 
-	public IfStatement(@Nonnull List<Pair<Expression, SingleStatement>> conditionStatementPairs,
+	public IfStatement(
+			@NotNull List<@NotNull Pair<@NotNull Expression, @Nullable SingleStatement>> conditionStatementPairs,
 			@Nullable SingleStatement alternativeStatement) {
 		this.conditionStatementPairs = conditionStatementPairs;
 		this.alternativeStatement = alternativeStatement;
 	}
 
-	@Nonnull
-	public List<Pair<Expression, SingleStatement>> getConditionStatementPairs() {
+	public @NotNull List<@NotNull Pair<@NotNull Expression, @Nullable SingleStatement>> getConditionStatementPairs() {
 		return conditionStatementPairs;
 	}
 
-	@Nullable
-	public SingleStatement getAlternativeStatement() {
+	public @Nullable SingleStatement getAlternativeStatement() {
 		return alternativeStatement;
+	}
+	
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		for (final Pair<Expression, SingleStatement> pair : conditionStatementPairs) {
+			final Expression expression = pair.getOne();
+			if (expression.visit(visitor)) return true;
+
+			final SingleStatement singleStatement = pair.getTwo();
+			if (singleStatement.visit(visitor)) return true;
+		}
+		if (alternativeStatement != null && alternativeStatement.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

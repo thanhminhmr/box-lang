@@ -18,27 +18,38 @@
 
 package mrmathami.box.lang.ast.definition;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.identifier.MemberIdentifier;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class MemberDefinition implements Definition {
-	@Nonnull private final Type type;
-	@Nonnull private final MemberIdentifier identifier;
+	private final @NotNull Type type;
+	private final @NotNull MemberIdentifier identifier;
 
-	public MemberDefinition(@Nonnull Type type, @Nonnull MemberIdentifier identifier) {
+	public MemberDefinition(@NotNull Type type, @NotNull MemberIdentifier identifier) {
 		this.type = type;
 		this.identifier = identifier;
 	}
 
-	@Nonnull
-	public Type getType() {
+	public @NotNull Type getType() {
 		return type;
 	}
 
-	@Nonnull
 	@Override
-	public MemberIdentifier getIdentifier() {
+	public @NotNull MemberIdentifier getIdentifier() {
 		return identifier;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (type.visit(visitor)) return true;
+		if (identifier.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

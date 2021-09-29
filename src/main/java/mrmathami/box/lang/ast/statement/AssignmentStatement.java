@@ -18,35 +18,45 @@
 
 package mrmathami.box.lang.ast.statement;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.AssignmentOperator;
 import mrmathami.box.lang.ast.expression.AssignableExpression;
 import mrmathami.box.lang.ast.expression.Expression;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class AssignmentStatement implements SingleStatement {
-	@Nonnull private final AssignableExpression assignableExpression;
-	@Nonnull private final AssignmentOperator assignmentOperator;
-	@Nonnull private final Expression expression;
+	private final @NotNull AssignableExpression assignableExpression;
+	private final @NotNull AssignmentOperator assignmentOperator;
+	private final @NotNull Expression expression;
 
-	public AssignmentStatement(@Nonnull AssignableExpression accessExpression,
-			@Nonnull AssignmentOperator assignmentOperator, @Nonnull Expression expression) {
+	public AssignmentStatement(@NotNull AssignableExpression accessExpression,
+			@NotNull AssignmentOperator assignmentOperator, @NotNull Expression expression) {
 		this.assignableExpression = accessExpression;
 		this.assignmentOperator = assignmentOperator;
 		this.expression = expression;
 	}
 
-	@Nonnull
-	public AssignableExpression getAssignableExpression() {
+	public @NotNull AssignableExpression getAssignableExpression() {
 		return assignableExpression;
 	}
 
-	@Nonnull
-	public AssignmentOperator getAssignmentOperator() {
+	public @NotNull AssignmentOperator getAssignmentOperator() {
 		return assignmentOperator;
 	}
 
-	@Nonnull
-	public Expression getExpression() {
+	public @NotNull Expression getExpression() {
 		return expression;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (assignableExpression.visit(visitor)) return true;
+		if (expression.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

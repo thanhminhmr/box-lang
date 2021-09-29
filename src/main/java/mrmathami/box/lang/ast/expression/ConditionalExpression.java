@@ -18,43 +18,53 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 public final class ConditionalExpression implements Expression {
-	@Nonnull private final Expression condition;
-	@Nonnull private final Expression trueExpression;
-	@Nonnull private final Expression falseExpression;
+	private final @NotNull Expression condition;
+	private final @NotNull Expression trueExpression;
+	private final @NotNull Expression falseExpression;
 
-	public ConditionalExpression(@Nonnull Expression condition, @Nonnull Expression trueExpression,
-			@Nonnull Expression falseExpression) {
+	public ConditionalExpression(@NotNull Expression condition, @NotNull Expression trueExpression,
+			@NotNull Expression falseExpression) {
 		this.condition = condition;
 		this.trueExpression = trueExpression;
 		this.falseExpression = falseExpression;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		final Type trueType = trueExpression.resolveType();
 		final Type falseType = falseExpression.resolveType();
 		if (trueType.equals(falseType)) return trueType;
 		throw new InvalidASTException("Invalid conditional expression: result operands have different types!");
 	}
 
-	@Nonnull
-	public Expression getCondition() {
+	public @NotNull Expression getCondition() {
 		return condition;
 	}
 
-	@Nonnull
-	public Expression getTrueExpression() {
+	public @NotNull Expression getTrueExpression() {
 		return trueExpression;
 	}
 
-	@Nonnull
-	public Expression getFalseExpression() {
+	public @NotNull Expression getFalseExpression() {
 		return falseExpression;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (condition.visit(visitor)) return true;
+		if (trueExpression.visit(visitor)) return true;
+		if (falseExpression.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

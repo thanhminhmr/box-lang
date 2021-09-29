@@ -18,18 +18,17 @@
 
 package mrmathami.box.lang.ast.identifier;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.FunctionDefinition;
+import org.jetbrains.annotations.NotNull;
 
 public final class FunctionIdentifier extends Identifier {
-	public FunctionIdentifier(@Nonnull String name) {
+	public FunctionIdentifier(@NotNull String name) {
 		super(name);
 	}
 
-	@Nonnull
 	@Override
-	public FunctionDefinition resolveDefinition() throws InvalidASTException {
+	public @NotNull FunctionDefinition resolveDefinition() throws InvalidASTException {
 		return (FunctionDefinition) super.resolveDefinition();
 	}
 }

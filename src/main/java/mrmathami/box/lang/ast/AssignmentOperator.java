@@ -18,41 +18,40 @@
 
 package mrmathami.box.lang.ast;
 
-import mrmathami.annotations.Nonnull;
-import mrmathami.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 public enum AssignmentOperator {
 	ASSIGN("=", null),
 	SHALLOW_CLONE(":=", null),
-	ARITHMETIC_MULTIPLY("*=", Operator.ARITHMETIC_MULTIPLY),
-	ARITHMETIC_DIVIDE("/=", Operator.ARITHMETIC_DIVIDE),
-	ARITHMETIC_MODULUS("%=", Operator.ARITHMETIC_MODULUS),
-	ARITHMETIC_ADD("+=", Operator.ARITHMETIC_ADD),
-	ARITHMETIC_SUBTRACT("-=", Operator.ARITHMETIC_SUBTRACT),
-	BIT_SHIFT_LEFT("<<=", Operator.BIT_SHIFT_LEFT),
-	BIT_SHIFT_RIGHT(">>=", Operator.BIT_SHIFT_RIGHT),
-	BIT_AND("&=", Operator.BIT_AND),
-	BIT_XOR("^=", Operator.BIT_XOR),
-	BIT_OR("|=", Operator.BIT_OR),
-	LOGIC_AND("&&=", Operator.LOGIC_AND),
-	LOGIC_XOR("^^=", Operator.LOGIC_OR),
-	LOGIC_OR("||=", Operator.LOGIC_XOR);
+	ARITHMETIC_MULTIPLY("*=", NormalOperator.ARITHMETIC_MULTIPLY),
+	ARITHMETIC_DIVIDE("/=", NormalOperator.ARITHMETIC_DIVIDE),
+	ARITHMETIC_MODULUS("%=", NormalOperator.ARITHMETIC_MODULUS),
+	ARITHMETIC_ADD("+=", NormalOperator.ARITHMETIC_ADD),
+	ARITHMETIC_SUBTRACT("-=", NormalOperator.ARITHMETIC_SUBTRACT),
+	BIT_SHIFT_LEFT("<<=", NormalOperator.BIT_SHIFT_LEFT),
+	BIT_SHIFT_RIGHT(">>=", NormalOperator.BIT_SHIFT_RIGHT),
+	BIT_AND("&=", NormalOperator.BIT_AND),
+	BIT_XOR("^=", NormalOperator.BIT_XOR),
+	BIT_OR("|=", NormalOperator.BIT_OR),
+	LOGIC_AND("&&=", NormalOperator.LOGIC_AND),
+	LOGIC_XOR("^^=", NormalOperator.LOGIC_OR),
+	LOGIC_OR("||=", NormalOperator.LOGIC_XOR);
 
-	@Nonnull public static final List<AssignmentOperator> values = List.of(values());
+	public static final @NotNull List<@NotNull AssignmentOperator> values = List.of(values());
 
-	@Nonnull private final String string;
-	@Nullable private final Operator operator;
+	private final @NotNull String string;
+	private final @Nullable NormalOperator operator;
 
-	AssignmentOperator(@Nonnull String string, @Nullable Operator operator) {
+	AssignmentOperator(@NotNull String string, @Nullable NormalOperator operator) {
 		this.string = string;
 		this.operator = operator;
 	}
 
-	@Nonnull
 	@Override
-	public final String toString() {
+	public final @NotNull String toString() {
 		return string;
 	}
 
@@ -60,8 +59,7 @@ public enum AssignmentOperator {
 		return operator != null;
 	}
 
-	@Nullable
-	public final Operator getOperator() {
+	public final @Nullable NormalOperator getOperator() {
 		return operator;
 	}
 }

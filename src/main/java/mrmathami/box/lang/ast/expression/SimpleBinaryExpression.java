@@ -18,22 +18,21 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.Operator;
+import mrmathami.box.lang.ast.NormalOperator;
 import mrmathami.box.lang.ast.type.Type;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class SimpleBinaryExpression extends BinaryExpression {
-	public SimpleBinaryExpression(@Nonnull List<Expression> operands, @Nonnull Operator operator) {
+	public SimpleBinaryExpression(@NotNull List<@NotNull Expression> operands, @NotNull NormalOperator operator) {
 		super(operands, operator);
 		assert operands.size() >= 2;
 	}
 
-	@Nonnull
 	@Override
-	public Type resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		return sameTypeCheck(operands);
 	}
 }

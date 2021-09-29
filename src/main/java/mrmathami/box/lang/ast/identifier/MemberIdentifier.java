@@ -18,18 +18,18 @@
 
 package mrmathami.box.lang.ast.identifier;
 
-import mrmathami.annotations.Nonnull;
+
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.MemberDefinition;
+import org.jetbrains.annotations.NotNull;
 
 public final class MemberIdentifier extends Identifier {
-	public MemberIdentifier(@Nonnull String name) {
+	public MemberIdentifier(@NotNull String name) {
 		super(name);
 	}
 
-	@Nonnull
 	@Override
-	public MemberDefinition resolveDefinition() throws InvalidASTException {
+	public @NotNull MemberDefinition resolveDefinition() throws InvalidASTException {
 		return (MemberDefinition) super.resolveDefinition();
 	}
 }

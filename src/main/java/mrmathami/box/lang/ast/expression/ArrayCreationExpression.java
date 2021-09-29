@@ -18,35 +18,48 @@
 
 package mrmathami.box.lang.ast.expression;
 
-import mrmathami.annotations.Nonnull;
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.type.ArrayType;
+import mrmathami.box.lang.ast.type.Type;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public final class ArrayCreationExpression implements Expression {
-	@Nonnull private final ArrayType type;
-	@Nonnull private final List<Expression> dimensionExpressions;
+	private final @NotNull ArrayType type;
+	private final @NotNull List<@NotNull Expression> dimensionExpressions;
 
-	public ArrayCreationExpression(@Nonnull ArrayType type, @Nonnull List<Expression> dimensionExpressions) {
+	public ArrayCreationExpression(@NotNull ArrayType type, @NotNull List<@NotNull Expression> dimensionExpressions) {
 		this.type = type;
 		this.dimensionExpressions = dimensionExpressions;
 	}
 
-	@Nonnull
-	public ArrayType getType() {
+	public @NotNull ArrayType getType() {
 		return type;
 	}
 
-	@Nonnull
-	public List<Expression> getDimensionExpressions() {
+	public @NotNull List<@NotNull Expression> getDimensionExpressions() {
 		return dimensionExpressions;
 	}
 
-	@Nonnull
 	@Override
-	public ArrayType resolveType() throws InvalidASTException {
+	public @NotNull Type resolveType() throws InvalidASTException {
 		// TODO
 		return type;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (type.visit(visitor)) return true;
+		for (final Expression dimensionExpression : dimensionExpressions) {
+			if (dimensionExpression.visit(visitor)) return true;
+		}
+
+		return visitor.leave(this) < 0;
 	}
 }

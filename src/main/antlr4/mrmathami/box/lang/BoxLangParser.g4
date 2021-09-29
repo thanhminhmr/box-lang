@@ -384,7 +384,7 @@ functionDefinition:
 		parameterDefinition (',' parameterDefinition)*
 	)? ')' blockStatement;
 
-definition:
+globalDefinition:
 	tupleDefinition
 	| variableDefinition
 	| functionDefinition;
@@ -456,6 +456,6 @@ statement: singleStatement | variableDefinition;
 
 //region compilation unit
 
-compilationUnit: (';' | definition)* EOF;
+compilationUnit: (';' | globalDefinition)* EOF;
 
 //endregion compilation unit

@@ -16,20 +16,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.identifier;
+package mrmathami.box.lang.ast.definition;
 
-
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.definition.VariableDefinition;
-import org.jetbrains.annotations.NotNull;
-
-public final class VariableIdentifier extends Identifier {
-	public VariableIdentifier(@NotNull String name) {
-		super(name);
-	}
-
-	@Override
-	public @NotNull VariableDefinition resolveDefinition() throws InvalidASTException {
-		return (VariableDefinition) super.resolveDefinition();
-	}
+public interface GlobalDefinition extends Definition {
 }
