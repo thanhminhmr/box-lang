@@ -16,19 +16,18 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.identifier;
+package mrmathami.box.lang.visitor;
 
-import mrmathami.box.lang.ast.AstNode;
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.definition.Definition;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-public interface Identifier extends AstNode {
-	@NotNull String getName();
+public class VisitorException extends Exception {
+	private static final long serialVersionUID = -1L;
 
-	@NotNull Definition resolveDefinition() throws InvalidASTException;
+	public VisitorException(@NotNull String message) {
+		super(message);
+	}
 
-	@ApiStatus.Internal
-	void internalSetDefinition(@NotNull Definition definition) throws InvalidASTException;
+	public VisitorException(@NotNull String message, @NotNull Throwable cause) {
+		super(message, cause);
+	}
 }

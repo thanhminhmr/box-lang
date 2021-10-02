@@ -20,16 +20,36 @@ package mrmathami.box.lang.ast.identifier;
 
 
 import mrmathami.box.lang.ast.InvalidASTException;
+import mrmathami.box.lang.ast.definition.Definition;
 import mrmathami.box.lang.ast.definition.VariableDefinition;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class VariableIdentifier extends Identifier {
+public final class VariableIdentifier implements Identifier {
+	private final @NotNull String name;
+	private @Nullable VariableDefinition definition;
+
 	public VariableIdentifier(@NotNull String name) {
-		super(name);
+		this.name = name;
+	}
+
+	@Override
+	public @NotNull String getName() {
+		return name;
 	}
 
 	@Override
 	public @NotNull VariableDefinition resolveDefinition() throws InvalidASTException {
-		return (VariableDefinition) super.resolveDefinition();
+		if (definition != null) return definition;
+		throw new InvalidASTException("Definition not found!");
+	}
+
+	@Override
+	public void internalSetDefinition(@NotNull Definition definition) throws InvalidASTException {
+		if (definition instanceof VariableDefinition) {
+			this.definition = (VariableDefinition) definition;
+			return;
+		}
+		throw new InvalidASTException("Invalid definition for identifier!");
 	}
 }

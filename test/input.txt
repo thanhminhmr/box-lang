@@ -50,3 +50,12 @@ u32[] _fibonacciArray(u32 $size) {
         if (i == $size) return array;
     }
 }
+
+u32[] _test() {
+	@first loop {
+		@second loop {
+			u32 a;
+			break @first;
+		}
+	}
+}

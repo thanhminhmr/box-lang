@@ -389,6 +389,8 @@ globalDefinition:
 	| variableDefinition
 	| functionDefinition;
 
+labelDefinition: LabelIdentifier loopStatement;
+
 //endregion definition
 
 //region statement
@@ -397,11 +399,11 @@ functionCallStatement: functionCallExpression ';';
 
 returnStatement: Return expression? ';';
 
-breakStatement: Break UntypedNumberLiteral? ';';
+breakStatement: Break LabelIdentifier? ';';
 
-continueStatement: Continue UntypedNumberLiteral? ';';
+continueStatement: Continue LabelIdentifier? ';';
 
-//region assignment statement
+loopStatement: Loop (';' | singleStatement);
 
 assignmentOperator:
 	'='
@@ -423,8 +425,6 @@ assignmentOperator:
 assignmentStatement:
 	assignableExpression assignmentOperator expression ';';
 
-//endregion assignment statement
-
 blockStatement: '{' (';' | statement )* '}';
 
 //region if statement
@@ -438,19 +438,20 @@ ifStatement:
 
 //endregion if statement
 
-loopStatement: Loop (';' | singleStatement);
-
 singleStatement:
 	functionCallStatement
 	| returnStatement
 	| breakStatement
 	| continueStatement
+	| loopStatement
 	| assignmentStatement
 	| blockStatement
-	| ifStatement
-	| loopStatement;
+	| ifStatement;
 
-statement: singleStatement | variableDefinition;
+statement:
+	variableDefinition
+	| labelDefinition
+	| singleStatement;
 
 //endregion statement
 

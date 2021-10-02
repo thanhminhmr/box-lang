@@ -16,23 +16,31 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.statement;
+package mrmathami.box.lang.ast.definition;
 
 import mrmathami.box.lang.ast.identifier.LabelIdentifier;
+import mrmathami.box.lang.ast.statement.LoopStatement;
+import mrmathami.box.lang.ast.statement.Statement;
 import mrmathami.box.lang.visitor.Visitor;
 import mrmathami.box.lang.visitor.VisitorException;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public final class BreakStatement implements SingleStatement {
-	private final @Nullable LabelIdentifier labelIdentifier;
+public class LabelDefinition implements Definition, Statement {
+	private final @NotNull LabelIdentifier identifier;
+	private final @NotNull LoopStatement loopStatement;
 
-	public BreakStatement(@Nullable LabelIdentifier labelIdentifier) {
-		this.labelIdentifier = labelIdentifier;
+	public LabelDefinition(@NotNull LabelIdentifier identifier, @NotNull LoopStatement loopStatement) {
+		this.identifier = identifier;
+		this.loopStatement = loopStatement;
 	}
 
-	public @Nullable LabelIdentifier getLabelIdentifier() {
-		return labelIdentifier;
+	@Override
+	public @NotNull LabelIdentifier getIdentifier() {
+		return identifier;
+	}
+
+	public @NotNull LoopStatement getLoopStatement() {
+		return loopStatement;
 	}
 
 	@Override
@@ -40,7 +48,8 @@ public final class BreakStatement implements SingleStatement {
 		final int enter = visitor.enter(this);
 		if (enter != 0) return enter < 0;
 
-		if (labelIdentifier != null && labelIdentifier.visit(visitor)) return true;
+		if (identifier.visit(visitor)) return true;
+		if (loopStatement.visit(visitor)) return true;
 
 		return visitor.leave(this) < 0;
 	}

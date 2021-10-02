@@ -130,6 +130,7 @@ MemberIdentifier: '.' [a-zA-Z] [0-9A-Z_a-z]*;
 FunctionIdentifier: '_' [0-9A-Z_a-z]*;
 ParameterIdentifier: '$' [0-9A-Z_a-z]*;
 VariableIdentifier: [a-z] [0-9A-Z_a-z]*;
+LabelIdentifier: '@' [0-9A-Z_a-z]*;
 
 //endregion Identifiers
 

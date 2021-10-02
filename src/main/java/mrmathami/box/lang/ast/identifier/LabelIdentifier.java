@@ -18,18 +18,17 @@
 
 package mrmathami.box.lang.ast.identifier;
 
-
 import mrmathami.box.lang.ast.InvalidASTException;
 import mrmathami.box.lang.ast.definition.Definition;
-import mrmathami.box.lang.ast.definition.TupleDefinition;
+import mrmathami.box.lang.ast.definition.LabelDefinition;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class TupleIdentifier implements Identifier {
+public final class LabelIdentifier implements Identifier {
 	private final @NotNull String name;
-	private @Nullable TupleDefinition definition;
+	private @Nullable LabelDefinition definition;
 
-	public TupleIdentifier(@NotNull String name) {
+	public LabelIdentifier(@NotNull String name) {
 		this.name = name;
 	}
 
@@ -39,15 +38,15 @@ public final class TupleIdentifier implements Identifier {
 	}
 
 	@Override
-	public @NotNull TupleDefinition resolveDefinition() throws InvalidASTException {
+	public @NotNull LabelDefinition resolveDefinition() throws InvalidASTException {
 		if (definition != null) return definition;
 		throw new InvalidASTException("Definition not found!");
 	}
 
 	@Override
 	public void internalSetDefinition(@NotNull Definition definition) throws InvalidASTException {
-		if (definition instanceof TupleDefinition) {
-			this.definition = (TupleDefinition) definition;
+		if (definition instanceof LabelDefinition) {
+			this.definition = (LabelDefinition) definition;
 			return;
 		}
 		throw new InvalidASTException("Invalid definition for identifier!");

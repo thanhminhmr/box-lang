@@ -20,16 +20,36 @@ package mrmathami.box.lang.ast.identifier;
 
 
 import mrmathami.box.lang.ast.InvalidASTException;
+import mrmathami.box.lang.ast.definition.Definition;
 import mrmathami.box.lang.ast.definition.ParameterDefinition;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public final class ParameterIdentifier extends Identifier {
+public final class ParameterIdentifier implements Identifier {
+	private final @NotNull String name;
+	private @Nullable ParameterDefinition definition;
+
 	public ParameterIdentifier(@NotNull String name) {
-		super(name);
+		this.name = name;
+	}
+
+	@Override
+	public @NotNull String getName() {
+		return name;
 	}
 
 	@Override
 	public @NotNull ParameterDefinition resolveDefinition() throws InvalidASTException {
-		return (ParameterDefinition) super.resolveDefinition();
+		if (definition != null) return definition;
+		throw new InvalidASTException("Definition not found!");
+	}
+
+	@Override
+	public void internalSetDefinition(@NotNull Definition definition) throws InvalidASTException {
+		if (definition instanceof ParameterDefinition) {
+			this.definition = (ParameterDefinition) definition;
+			return;
+		}
+		throw new InvalidASTException("Invalid definition for identifier!");
 	}
 }

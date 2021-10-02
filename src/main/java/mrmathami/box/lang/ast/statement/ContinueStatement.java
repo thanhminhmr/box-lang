@@ -18,14 +18,30 @@
 
 package mrmathami.box.lang.ast.statement;
 
-public final class ContinueStatement implements SingleStatement {
-	private final long value;
+import mrmathami.box.lang.ast.identifier.LabelIdentifier;
+import mrmathami.box.lang.visitor.Visitor;
+import mrmathami.box.lang.visitor.VisitorException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-	public ContinueStatement(long value) {
-		this.value = value;
+public final class ContinueStatement implements SingleStatement {
+	private final @Nullable LabelIdentifier labelIdentifier;
+
+	public ContinueStatement(@Nullable LabelIdentifier labelIdentifier) {
+		this.labelIdentifier = labelIdentifier;
 	}
 
-	public long getValue() {
-		return value;
+	public @Nullable LabelIdentifier getLabelIdentifier() {
+		return labelIdentifier;
+	}
+
+	@Override
+	public boolean visit(@NotNull Visitor visitor) throws VisitorException {
+		final int enter = visitor.enter(this);
+		if (enter != 0) return enter < 0;
+
+		if (labelIdentifier != null && labelIdentifier.visit(visitor)) return true;
+
+		return visitor.leave(this) < 0;
 	}
 }

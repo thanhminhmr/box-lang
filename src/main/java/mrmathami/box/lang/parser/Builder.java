@@ -52,6 +52,7 @@ import mrmathami.box.lang.BoxLangParser.FunctionCallStatementContext;
 import mrmathami.box.lang.BoxLangParser.FunctionDefinitionContext;
 import mrmathami.box.lang.BoxLangParser.GlobalDefinitionContext;
 import mrmathami.box.lang.BoxLangParser.IfStatementContext;
+import mrmathami.box.lang.BoxLangParser.LabelDefinitionContext;
 import mrmathami.box.lang.BoxLangParser.LiteralExpressionContext;
 import mrmathami.box.lang.BoxLangParser.LoopStatementContext;
 import mrmathami.box.lang.BoxLangParser.MultiplyExpressionContext;
@@ -83,6 +84,7 @@ import mrmathami.box.lang.ast.NormalOperator;
 import mrmathami.box.lang.ast.definition.Definition;
 import mrmathami.box.lang.ast.definition.FunctionDefinition;
 import mrmathami.box.lang.ast.definition.GlobalDefinition;
+import mrmathami.box.lang.ast.definition.LabelDefinition;
 import mrmathami.box.lang.ast.definition.MemberDefinition;
 import mrmathami.box.lang.ast.definition.ParameterDefinition;
 import mrmathami.box.lang.ast.definition.TupleDefinition;
@@ -107,6 +109,7 @@ import mrmathami.box.lang.ast.expression.UnaryExpression;
 import mrmathami.box.lang.ast.expression.VariableExpression;
 import mrmathami.box.lang.ast.identifier.FunctionIdentifier;
 import mrmathami.box.lang.ast.identifier.Identifier;
+import mrmathami.box.lang.ast.identifier.LabelIdentifier;
 import mrmathami.box.lang.ast.identifier.MemberIdentifier;
 import mrmathami.box.lang.ast.identifier.ParameterIdentifier;
 import mrmathami.box.lang.ast.identifier.TupleIdentifier;
@@ -165,7 +168,7 @@ public class Builder implements AutoCloseable {
 
 	private final @NotNull List<@NotNull MemberAccessExpression> members;
 
-	private final @NotNull List<@NotNull Identifier> identifiers = new ArrayList<>();
+	private final @NotNull List<@NotNull Identifier> Identifiers = new ArrayList<>();
 	private final Map<@NotNull String, @NotNull Definition> definitions = new HashMap<>();
 
 	public Builder() {
@@ -188,13 +191,13 @@ public class Builder implements AutoCloseable {
 	@Override
 	public void close() throws InvalidASTException {
 		// resolve all identifiers
-		for (final Identifier identifier : identifiers) {
+		for (final Identifier identifier : Identifiers) {
 			final String name = identifier.getName();
 			final Definition definition = lookupDefinition(name);
 			if (definition != null) {
-				identifier.setDefinition(definition);
+				identifier.internalSetDefinition(definition);
 			} else if (parentBuilder != null) {
-				parentBuilder.identifiers.add(identifier);
+				parentBuilder.Identifiers.add(identifier);
 			} else {
 				throw new InvalidASTException("Unresolved identifier: " + identifier.getName());
 			}
@@ -212,7 +215,7 @@ public class Builder implements AutoCloseable {
 							.filter(member -> name.equals(member.getIdentifier().getName()))
 							.findFirst();
 					if (optional.isEmpty()) throw new InvalidASTException("Unresolved identifier: " + name);
-					identifier.setDefinition(optional.get());
+					identifier.internalSetDefinition(optional.get());
 				} else {
 					throw new InvalidASTException("Member access non-tuple type: " + type);
 				}
@@ -241,7 +244,7 @@ public class Builder implements AutoCloseable {
 
 	private <E extends Identifier> @NotNull E newIdentifier(@NotNull E identifier) {
 		assert !(identifier instanceof MemberIdentifier);
-		identifiers.add(identifier);
+		Identifiers.add(identifier);
 		return identifier;
 	}
 
@@ -333,6 +336,14 @@ public class Builder implements AutoCloseable {
 		return newDefinition(identifier.getName(), definition);
 	}
 
+	private @NotNull LabelDefinition labelDefinition(@NotNull LabelDefinitionContext context)
+			throws InvalidASTException {
+		final LabelIdentifier identifier = labelIdentifier(context.LabelIdentifier());
+		final LoopStatement loopStatement = loopStatement(context.loopStatement());
+		final LabelDefinition definition = new LabelDefinition(identifier, loopStatement);
+		return newDefinition(identifier.getName(), definition);
+	}
+
 	//endregion definition
 
 	//region identifier
@@ -361,6 +372,11 @@ public class Builder implements AutoCloseable {
 	private @NotNull ParameterIdentifier parameterIdentifier(@NotNull TerminalNode identifier) {
 		assert identifier.getSymbol().getType() == BoxLangLexer.ParameterIdentifier;
 		return newIdentifier(new ParameterIdentifier(identifier.getText()));
+	}
+
+	private @NotNull LabelIdentifier labelIdentifier(@NotNull TerminalNode identifier) {
+		assert identifier.getSymbol().getType() == BoxLangLexer.LabelIdentifier;
+		return newIdentifier(new LabelIdentifier(identifier.getText()));
 	}
 
 	//endregion identifier
@@ -772,6 +788,8 @@ public class Builder implements AutoCloseable {
 			throws InvalidASTException {
 		final VariableDefinitionContext variableDefinition = context.variableDefinition();
 		if (variableDefinition != null) return variableDefinition(variableDefinition);
+		final LabelDefinitionContext labelDefinition = context.labelDefinition();
+		if (labelDefinition != null) return labelDefinition(labelDefinition);
 		final SingleStatementContext singleStatement = context.singleStatement();
 		if (singleStatement != null) return singleStatement(singleStatement);
 		throw up();
@@ -789,12 +807,12 @@ public class Builder implements AutoCloseable {
 		if (continueStatement != null) return continueStatement(continueStatement);
 		final AssignmentStatementContext assignmentStatement = context.assignmentStatement();
 		if (assignmentStatement != null) return assignmentStatement(assignmentStatement);
+		final LoopStatementContext loopStatement = context.loopStatement();
+		if (loopStatement != null) return loopStatement(loopStatement);
 		final BlockStatementContext blockStatement = context.blockStatement();
 		if (blockStatement != null) return blockStatement(blockStatement);
 		final IfStatementContext ifStatement = context.ifStatement();
 		if (ifStatement != null) return ifStatement(ifStatement);
-		final LoopStatementContext loopStatement = context.loopStatement();
-		if (loopStatement != null) return loopStatement(loopStatement);
 		throw up();
 	}
 
@@ -811,18 +829,21 @@ public class Builder implements AutoCloseable {
 		return new ReturnStatement(expression);
 	}
 
-	private @NotNull BreakStatement breakStatement(@NotNull BreakStatementContext context)
-			throws InvalidASTException {
-		final TerminalNode untypedNumber = context.UntypedNumberLiteral();
-		final long value = untypedNumber != null ? untypedNumber(untypedNumber.getText()) : 0;
-		return new BreakStatement(value);
+	private @NotNull BreakStatement breakStatement(@NotNull BreakStatementContext context) {
+		final TerminalNode labelIdentifier = context.LabelIdentifier();
+		return new BreakStatement(labelIdentifier != null ? labelIdentifier(labelIdentifier) : null);
 	}
 
-	private @NotNull ContinueStatement continueStatement(@NotNull ContinueStatementContext context)
+	private @NotNull ContinueStatement continueStatement(@NotNull ContinueStatementContext context) {
+		final TerminalNode labelIdentifier = context.LabelIdentifier();
+		return new ContinueStatement(labelIdentifier != null ? labelIdentifier(labelIdentifier) : null);
+	}
+
+	private @NotNull LoopStatement loopStatement(@NotNull LoopStatementContext context)
 			throws InvalidASTException {
-		final TerminalNode untypedNumber = context.UntypedNumberLiteral();
-		final long value = untypedNumber != null ? untypedNumber(untypedNumber.getText()) : 0;
-		return new ContinueStatement(value);
+		final SingleStatementContext singleStatement = context.singleStatement();
+		final SingleStatement statement = singleStatement != null ? singleStatement(singleStatement) : null;
+		return new LoopStatement(statement);
 	}
 
 	private @NotNull AssignmentStatement assignmentStatement(@NotNull AssignmentStatementContext context)
@@ -861,13 +882,6 @@ public class Builder implements AutoCloseable {
 				? singleStatement(statementContext)
 				: null;
 		return new IfStatement(pairs, alternativeStatement);
-	}
-
-	private @NotNull LoopStatement loopStatement(@NotNull LoopStatementContext context)
-			throws InvalidASTException {
-		final SingleStatementContext singleStatement = context.singleStatement();
-		final SingleStatement statement = singleStatement != null ? singleStatement(singleStatement) : null;
-		return new LoopStatement(statement);
 	}
 
 	//endregion statement
