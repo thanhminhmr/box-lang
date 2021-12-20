@@ -34,10 +34,11 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.squareup</groupId>
-			<artifactId>javapoet</artifactId>
-			<version>1.13.0</version>
+			<groupId>org.apfloat</groupId>
+			<artifactId>apfloat</artifactId>
+			<version>1.10.1</version>
 		</dependency>
+
 	</dependencies>
 
 	<build>

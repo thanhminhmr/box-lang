@@ -128,7 +128,9 @@ import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.TupleType;
 import mrmathami.box.lang.ast.type.Type;
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CodePointCharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -158,7 +160,7 @@ import static mrmathami.box.lang.BoxLangParser.AccessibleExpressionContext;
 import static mrmathami.box.lang.BoxLangParser.MemberDefinitionContext;
 import static mrmathami.box.lang.BoxLangParser.ParameterExpressionContext;
 
-public class Builder implements AutoCloseable {
+public final class Builder implements AutoCloseable {
 	private static final @NotNull BigInteger SIGNER_I8 = new BigInteger("-100", 16);
 	private static final @NotNull BigInteger SIGNER_I16 = new BigInteger("-10000", 16);
 	private static final @NotNull BigInteger SIGNER_I32 = new BigInteger("-100000000", 16);
@@ -171,7 +173,7 @@ public class Builder implements AutoCloseable {
 	private final @NotNull List<@NotNull Identifier> Identifiers = new ArrayList<>();
 	private final Map<@NotNull String, @NotNull Definition> definitions = new HashMap<>();
 
-	public Builder() {
+	private Builder() {
 		this.parentBuilder = null;
 		this.members = new ArrayList<>();
 	}
@@ -181,10 +183,16 @@ public class Builder implements AutoCloseable {
 		this.members = parentBuilder.members;
 	}
 
-//	@NotNull
-//	private static <A, B, C> Pair<A, B> newPair(@Nullable C any) {
-//		return Pair.mutableOf(null, null);
-//	}
+	public static @NotNull CompilationUnit build(@NotNull CharStream charStream) throws InvalidASTException {
+		final BoxLangLexer lexer = new BoxLangLexer(charStream);
+
+		final CommonTokenStream tokens = new CommonTokenStream(lexer);
+		final BoxLangParser parser = new BoxLangParser(tokens);
+
+		try (final Builder builder = new Builder()) {
+			return builder.compilationUnit(parser.compilationUnit());
+		}
+	}
 
 	//region resolver
 
@@ -677,11 +685,12 @@ public class Builder implements AutoCloseable {
 		if (memberIdentifier != null) {
 			final MemberIdentifier identifier = memberIdentifier(memberIdentifier);
 			return newMember(new MemberAccessExpression(accessibleExpression, identifier));
+		} else {
+			final List<ExpressionContext> expressionContexts = context.expressionList().expression();
+			final List<Expression> expressions = miscParseExpressions(
+					new ArrayList<>(expressionContexts.size()), expressionContexts);
+			return new ArrayAccessExpression(accessibleExpression, expressions);
 		}
-		final List<ExpressionContext> expressionContexts = context.expressionList().expression();
-		final List<Expression> expressions = miscParseExpressions(
-				new ArrayList<>(expressionContexts.size()), expressionContexts);
-		return new ArrayAccessExpression(accessibleExpression, expressions);
 	}
 
 	private @NotNull AccessExpression accessExpression(@NotNull AccessExpressionContext context)
@@ -990,29 +999,15 @@ public class Builder implements AutoCloseable {
 
 	//endregion parsed context processor
 
-	//region
-
-
-	//endregion
-
 	private static @NotNull RuntimeException up() {
 		return new RuntimeException("This should not happen!");
 	}
 
 	public static void main(@NotNull String[] args) throws IOException, InvalidASTException {
 		final String string = Files.readString(Path.of("./test/input.txt"));
-		final BoxLangLexer lexer = new BoxLangLexer(CharStreams.fromString(string));
+		final CodePointCharStream charStream = CharStreams.fromString(string);
 
-		final CommonTokenStream tokens = new CommonTokenStream(lexer);
-		final BoxLangParser parser = new BoxLangParser(tokens);
-//		final ParseTree tree = parser.compilationUnit();
-//
-//		System.out.println(tree);
-
-		final CompilationUnit compilationUnit;
-		try (final Builder builder = new Builder()) {
-			compilationUnit = builder.compilationUnit(parser.compilationUnit());
-		}
+		final CompilationUnit compilationUnit = Builder.build(charStream);
 		System.out.println(compilationUnit);
 	}
 }

@@ -16,7 +16,15 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package mrmathami.box.lang.ast.expression;
+package mrmathami.box.lang.visitor;
 
-public interface AccessExpression extends AssignableExpression {
+import mrmathami.box.lang.ast.AstNode;
+import org.jetbrains.annotations.NotNull;
+
+public interface FilteredVisitor<N extends AstNode> {
+	@NotNull Class<N> getNodeClass();
+
+	int enter(@NotNull N node) throws VisitorException;
+
+	int leave(@NotNull N node) throws VisitorException;
 }

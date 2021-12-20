@@ -26,7 +26,7 @@ import mrmathami.box.lang.visitor.Visitor;
 import mrmathami.box.lang.visitor.VisitorException;
 import org.jetbrains.annotations.NotNull;
 
-public final class VariableExpression implements AccessibleExpression, AssignableExpression {
+public final class VariableExpression implements AssignableExpression {
 	private final @NotNull VariableIdentifier identifier;
 
 	public VariableExpression(@NotNull VariableIdentifier identifier) {
