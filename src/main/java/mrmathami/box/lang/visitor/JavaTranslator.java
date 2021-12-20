@@ -18,50 +18,11 @@
 
 package mrmathami.box.lang.visitor;
 
-import mrmathami.box.lang.ast.AssignmentOperator;
-import mrmathami.box.lang.ast.AstNode;
-import mrmathami.box.lang.ast.CompilationUnit;
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.Keyword;
-import mrmathami.box.lang.ast.NormalOperator;
-import mrmathami.box.lang.ast.definition.Definition;
-import mrmathami.box.lang.ast.definition.FunctionDefinition;
-import mrmathami.box.lang.ast.definition.GlobalDefinition;
-import mrmathami.box.lang.ast.definition.LabelDefinition;
-import mrmathami.box.lang.ast.definition.MemberDefinition;
-import mrmathami.box.lang.ast.definition.ParameterDefinition;
-import mrmathami.box.lang.ast.definition.TupleDefinition;
-import mrmathami.box.lang.ast.definition.VariableDefinition;
-import mrmathami.box.lang.ast.expression.AccessExpression;
-import mrmathami.box.lang.ast.expression.AccessibleExpression;
-import mrmathami.box.lang.ast.expression.ArrayAccessExpression;
-import mrmathami.box.lang.ast.expression.ArrayCreationExpression;
-import mrmathami.box.lang.ast.expression.AssignableExpression;
-import mrmathami.box.lang.ast.expression.BinaryExpression;
-import mrmathami.box.lang.ast.expression.CastExpression;
-import mrmathami.box.lang.ast.expression.ComparisonExpression;
-import mrmathami.box.lang.ast.expression.ConditionalExpression;
-import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.box.lang.ast.expression.FunctionCallExpression;
-import mrmathami.box.lang.ast.expression.LiteralExpression;
-import mrmathami.box.lang.ast.expression.MemberAccessExpression;
-import mrmathami.box.lang.ast.expression.ParameterExpression;
-import mrmathami.box.lang.ast.expression.ShiftExpression;
-import mrmathami.box.lang.ast.expression.SimpleBinaryExpression;
-import mrmathami.box.lang.ast.expression.TupleCreationExpression;
-import mrmathami.box.lang.ast.expression.UnaryExpression;
-import mrmathami.box.lang.ast.expression.VariableExpression;
-import mrmathami.box.lang.ast.identifier.LabelIdentifier;
-import mrmathami.box.lang.ast.statement.AssignmentStatement;
-import mrmathami.box.lang.ast.statement.BlockStatement;
-import mrmathami.box.lang.ast.statement.BreakStatement;
-import mrmathami.box.lang.ast.statement.ContinueStatement;
-import mrmathami.box.lang.ast.statement.FunctionCallStatement;
-import mrmathami.box.lang.ast.statement.IfStatement;
-import mrmathami.box.lang.ast.statement.LoopStatement;
-import mrmathami.box.lang.ast.statement.ReturnStatement;
-import mrmathami.box.lang.ast.statement.SingleStatement;
-import mrmathami.box.lang.ast.statement.Statement;
+import mrmathami.box.lang.ast.*;
+import mrmathami.box.lang.ast.definition.*;
+import mrmathami.box.lang.ast.expression.*;
+import mrmathami.box.lang.ast.identifier.*;
+import mrmathami.box.lang.ast.statement.*;
 import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.TupleType;
@@ -72,31 +33,35 @@ import org.antlr.v4.runtime.CodePointCharStream;
 import org.eclipse.collections.api.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class JavaTranslator {
-	private final @NotNull Appendable appendable;
+	private final @NotNull IndentAppender appender;
 
 
-	public JavaTranslator(@NotNull Appendable writer) {
-		this.appendable = writer;
+	public JavaTranslator(@NotNull Appendable appendable) {
+		this.appender = new IndentAppender(appendable);
 	}
 
 	public void fromCompilationUnit(@NotNull CompilationUnit compilationUnit)
 			throws VisitorException, IOException {
-		new JavaTranslator(appendable).compilationUnit(compilationUnit);
+		new JavaTranslator(appender).compilationUnit(compilationUnit);
 	}
 
 
 	public void compilationUnit(@NotNull CompilationUnit compilationUnit) throws IOException {
-		appendable.append("public final class JavaTranslatedBox {\n");
-		for (final GlobalDefinition globalDefinition : compilationUnit.getDefinitions()) {
-			globalDefinition(globalDefinition);
+		appender.append("public final class JavaTranslatedBox {");
+		try (final Closeable ignored = appender.indent()) {
+			for (final GlobalDefinition globalDefinition : compilationUnit.getDefinitions()) {
+				globalDefinition(globalDefinition);
+				appender.newLine();
+			}
 		}
-		appendable.append("}\n");
+		appender.append("}").newLine();
 	}
 
 
@@ -107,13 +72,58 @@ public class JavaTranslator {
 		final String string = Files.readString(Path.of("./test/input.txt"));
 		final CodePointCharStream charStream = CharStreams.fromString(string);
 
-		final StringBuilder builder = new StringBuilder();
+//		final StringBuilder builder = new StringBuilder();
 		final CompilationUnit compilationUnit = Builder.build(charStream);
-		final JavaTranslator translator = new JavaTranslator(builder);
+//		final JavaTranslator translator = new JavaTranslator(builder);
+		final JavaTranslator translator = new JavaTranslator(System.out);
 		translator.compilationUnit(compilationUnit);
-		System.out.println(builder);
+//		System.out.println(builder);
 	}
 
+
+	// =========================================
+
+	private void identifier(@NotNull Identifier node) throws IOException {
+		if (node instanceof FunctionIdentifier) {
+			functionIdentifier((FunctionIdentifier) node);
+		} else if (node instanceof LabelIdentifier) {
+			labelIdentifier((LabelIdentifier) node);
+		} else if (node instanceof MemberIdentifier) {
+			memberIdentifier((MemberIdentifier) node);
+		} else if (node instanceof ParameterIdentifier) {
+			parameterIdentifier((ParameterIdentifier) node);
+		} else if (node instanceof TupleIdentifier) {
+			tupleIdentifier((TupleIdentifier) node);
+		} else if (node instanceof VariableIdentifier) {
+			variableIdentifier((VariableIdentifier) node);
+		} else {
+			throw new AssertionError();
+		}
+	}
+
+	private void functionIdentifier(@NotNull FunctionIdentifier node) throws IOException {
+		appender.append(node.getName());
+	}
+
+	private void labelIdentifier(@NotNull LabelIdentifier node) throws IOException {
+		appender.append(node.getName().substring(1));
+	}
+
+	private void memberIdentifier(@NotNull MemberIdentifier node) throws IOException {
+		appender.append(node.getName().substring(1));
+	}
+
+	private void parameterIdentifier(@NotNull ParameterIdentifier node) throws IOException {
+		appender.append(node.getName().substring(1));
+	}
+
+	private void tupleIdentifier(@NotNull TupleIdentifier node) throws IOException {
+		appender.append(node.getName());
+	}
+
+	private void variableIdentifier(@NotNull VariableIdentifier node) throws IOException {
+		appender.append(node.getName());
+	}
 
 	// =========================================
 
@@ -134,263 +144,274 @@ public class JavaTranslator {
 	}
 
 	private void functionDefinition(@NotNull FunctionDefinition node) throws IOException {
-		appendable.append("public final ");
+		appender.newLine().append("final ");
 		type(node.getReturnType());
-		appendable.append(' ').append(node.getIdentifier().getName()).append('(');
-		boolean comma = false;
+		appender.append(' ');
+		functionIdentifier(node.getIdentifier());
+		appender.append('(');
+		boolean separator = false;
 		for (final ParameterDefinition parameterDefinition : node.getParameters()) {
-			if (comma) appendable.append(", ");
+			if (separator) appender.append(", ");
 			parameterDefinition(parameterDefinition);
-			comma = true;
+			separator = true;
 		}
-		appendable.append(") ");
+		appender.append(") ");
 		blockStatement(node.getBody());
-		appendable.append('\n');
+		appender.newLine();
 	}
 
 	private void parameterDefinition(@NotNull ParameterDefinition node) throws IOException {
 		type(node.getType());
-		appendable.append(' ').append(node.getIdentifier().getName());
+		appender.append(' ');
+		parameterIdentifier(node.getIdentifier());
 	}
 
 	private void tupleDefinition(@NotNull TupleDefinition node) throws IOException {
-		appendable.append("private static final class ").append(node.getIdentifier().getName()).append(" {\n");
-		for (final MemberDefinition memberDefinition : node.getMembers()) {
-			memberDefinition(memberDefinition);
+		appender.append("static final class ");
+		tupleIdentifier(node.getIdentifier());
+		appender.append(" {").newLine();
+		try (final Closeable ignored = appender.indent()) {
+			for (final MemberDefinition memberDefinition : node.getMembers()) {
+				memberDefinition(memberDefinition);
+				appender.newLine();
+			}
 		}
-		appendable.append("}\n");
+		appender.append('}');
 	}
 
 	private void memberDefinition(@NotNull MemberDefinition node) throws IOException {
-		appendable.append("private ");
 		type(node.getType());
-		appendable.append(' ').append(node.getIdentifier().getName()).append(";\n");
+		appender.append(' ');
+		memberIdentifier(node.getIdentifier());
+		appender.append(';');
 	}
 
 	private void variableDefinition(@NotNull VariableDefinition node) throws IOException {
-		appendable.append("private ");
 		type(node.getType());
-		appendable.append(' ').append(node.getIdentifier().getName());
+		appender.append(' ');
+		variableIdentifier(node.getIdentifier());
 
 		final Expression initialValue = node.getInitialValue();
 		if (initialValue != null) {
-			appendable.append(" = ");
-			expression(initialValue);
+			appender.append(" = ");
+			expression(initialValue, false);
 		}
-		appendable.append(";\n");
+		appender.append(';');
 	}
 
 	private void labelDefinition(@NotNull LabelDefinition node) throws IOException {
-		appendable.append(node.getIdentifier().getName()).append(":\n");
+		labelIdentifier(node.getIdentifier());
+		appender.append(": ");
 		loopStatement(node.getLoopStatement());
 	}
 
 	// =========================================
 
-	private void expression(@NotNull Expression node) throws IOException {
+	private void expression(@NotNull Expression node, boolean parentheses) throws IOException {
 		if (node instanceof AccessibleExpression) {
-			accessibleExpression((AccessibleExpression) node);
+			accessibleExpression((AccessibleExpression) node, parentheses);
 		} else if (node instanceof BinaryExpression) {
-			binaryExpression((BinaryExpression) node);
+			binaryExpression((BinaryExpression) node, parentheses);
 		} else if (node instanceof ArrayCreationExpression) {
-			arrayCreationExpression((ArrayCreationExpression) node);
+			arrayCreationExpression((ArrayCreationExpression) node, parentheses);
 		} else if (node instanceof CastExpression) {
-			castExpression((CastExpression) node);
+			castExpression((CastExpression) node, parentheses);
 		} else if (node instanceof ConditionalExpression) {
-			conditionalExpression((ConditionalExpression) node);
+			conditionalExpression((ConditionalExpression) node, parentheses);
 		} else if (node instanceof LiteralExpression) {
-			literalExpression((LiteralExpression) node);
+			literalExpression((LiteralExpression) node, parentheses);
 		} else if (node instanceof TupleCreationExpression) {
-			tupleCreationExpression((TupleCreationExpression) node);
+			tupleCreationExpression((TupleCreationExpression) node, parentheses);
 		} else if (node instanceof UnaryExpression) {
-			unaryExpression((UnaryExpression) node);
+			unaryExpression((UnaryExpression) node, parentheses);
 		} else {
 			throw new AssertionError();
 		}
 	}
 
-	private void arrayCreationExpression(@NotNull ArrayCreationExpression node) throws IOException {
-		appendable.append("(new ");
-		type(node.getType());
-		appendable.append('[');
-		boolean comma = false;
+	private void arrayCreationExpression(@NotNull ArrayCreationExpression node, boolean parentheses) throws IOException {
+		appender.append("new ");
+		final ArrayType arrayType = node.getType();
+		type(arrayType.getInnerType());
+		appender.append('[');
+		boolean separator = false;
 		for (final Expression expression : node.getDimensionExpressions()) {
-			if (comma) appendable.append(", ");
-			expression(expression);
-			comma = true;
+			if (separator) appender.append("][");
+			expression(expression, false);
+			separator = true;
 		}
-		appendable.append("])");
+		appender.append(']');
 	}
 
-	private void castExpression(@NotNull CastExpression node) throws IOException {
-		appendable.append('(');
+	private void castExpression(@NotNull CastExpression node, boolean parentheses) throws IOException {
 		type(node.getType());
-		appendable.append('(');
-		expression(node.getExpression());
-		appendable.append("))");
+		appender.append('(');
+		expression(node.getExpression(), false);
+		appender.append(')');
 	}
 
-	private void conditionalExpression(@NotNull ConditionalExpression node) throws IOException {
-		appendable.append("((");
-		expression(node.getCondition());
-		appendable.append(")?(");
-		expression(node.getTrueExpression());
-		appendable.append("):(");
-		expression(node.getFalseExpression());
-		appendable.append("))");
+	private void conditionalExpression(@NotNull ConditionalExpression node, boolean parentheses) throws IOException {
+		if (parentheses) appender.append('(');
+		expression(node.getCondition(), true);
+		appender.append(" ? ");
+		expression(node.getTrueExpression(), true);
+		appender.append(" : ");
+		expression(node.getFalseExpression(), true);
+		if (parentheses) appender.append(')');
 	}
 
-	private void literalExpression(@NotNull LiteralExpression node) throws IOException {
-		appendable.append('(');
+	private void literalExpression(@NotNull LiteralExpression node, boolean parentheses) throws IOException {
 		final Keyword keyword = node.getKeyword();
 		final BigInteger number = node.getNumber();
 		if (keyword != null && number == null) {
-			appendable.append(keyword.toString());
+			appender.append(keyword.toString());
 		} else if (number != null && keyword == null) {
-			appendable.append(number.toString());
+			appender.append(number.toString());
 		} else {
 			throw new AssertionError();
 		}
-		appendable.append(')');
 	}
 
-	private void tupleCreationExpression(@NotNull TupleCreationExpression node) throws IOException {
-		appendable.append("(new ");
+	private void tupleCreationExpression(@NotNull TupleCreationExpression node, boolean parentheses) throws IOException {
+		appender.append("new ");
 		type(node.getType());
-		appendable.append('(');
-		boolean comma = false;
+		appender.append('(');
+		boolean separator = false;
 		for (final Expression expression : node.getMemberExpressions()) {
-			if (comma) appendable.append(", ");
-			expression(expression);
-			comma = true;
+			if (separator) appender.append(", ");
+			expression(expression, false);
+			separator = true;
 		}
-		appendable.append("))");
+		appender.append(')');
 	}
 
-	private void unaryExpression(@NotNull UnaryExpression node) throws IOException {
-		appendable.append('(').append(node.getOperator().toString());
-		expression(node.getExpression());
-		appendable.append(')');
+	private void unaryExpression(@NotNull UnaryExpression node, boolean parentheses) throws IOException {
+		if (parentheses) appender.append('(');
+		appender.append(node.getOperator().toString());
+		expression(node.getExpression(), true);
+		if (parentheses) appender.append(')');
 	}
 
 
-	private void accessibleExpression(@NotNull AccessibleExpression node) throws IOException {
+	private void accessibleExpression(@NotNull AccessibleExpression node, boolean parentheses) throws IOException {
 		if (node instanceof AssignableExpression) {
-			assignableExpression((AssignableExpression) node);
+			assignableExpression((AssignableExpression) node, parentheses);
 		} else if (node instanceof FunctionCallExpression) {
-			functionCallExpression((FunctionCallExpression) node);
+			functionCallExpression((FunctionCallExpression) node, parentheses);
 		} else if (node instanceof ParameterExpression) {
-			parameterExpression((ParameterExpression) node);
+			parameterExpression((ParameterExpression) node, parentheses);
 		} else {
 			throw new AssertionError();
 		}
 	}
 
-	private void functionCallExpression(@NotNull FunctionCallExpression node) throws IOException {
-		appendable.append(node.getIdentifier().getName()).append('(');
-		boolean comma = false;
+	private void functionCallExpression(@NotNull FunctionCallExpression node, boolean parentheses) throws IOException {
+		functionIdentifier(node.getIdentifier());
+		appender.append('(');
+		boolean separator = false;
 		for (final Expression expression : node.getArguments()) {
-			if (comma) appendable.append(", ");
-			expression(expression);
-			comma = true;
+			if (separator) appender.append(", ");
+			expression(expression, false);
+			separator = true;
 		}
-		appendable.append(')');
+		appender.append(')');
 	}
 
-	private void parameterExpression(@NotNull ParameterExpression node) throws IOException {
-		appendable.append(node.getIdentifier().getName());
+	private void parameterExpression(@NotNull ParameterExpression node, boolean parentheses) throws IOException {
+		parameterIdentifier(node.getIdentifier());
 	}
 
 
-	private void assignableExpression(@NotNull AssignableExpression node) throws IOException {
+	private void assignableExpression(@NotNull AssignableExpression node, boolean parentheses) throws IOException {
 		if (node instanceof AccessExpression) {
-			accessExpression((AccessExpression) node);
+			accessExpression((AccessExpression) node, parentheses);
 		} else if (node instanceof VariableExpression) {
-			variableExpression((VariableExpression) node);
+			variableExpression((VariableExpression) node, parentheses);
 		} else {
 			throw new AssertionError();
 		}
 	}
 
-	private void variableExpression(@NotNull VariableExpression node) throws IOException {
-		appendable.append(node.getIdentifier().getName());
+	private void variableExpression(@NotNull VariableExpression node, boolean parentheses) throws IOException {
+		variableIdentifier(node.getIdentifier());
 	}
 
 
-	private void accessExpression(@NotNull AccessExpression node) throws IOException {
+	private void accessExpression(@NotNull AccessExpression node, boolean parentheses) throws IOException {
 		if (node instanceof ArrayAccessExpression) {
-			arrayAccessExpression((ArrayAccessExpression) node);
+			arrayAccessExpression((ArrayAccessExpression) node, parentheses);
 		} else if (node instanceof MemberAccessExpression) {
-			memberAccessExpression((MemberAccessExpression) node);
+			memberAccessExpression((MemberAccessExpression) node, parentheses);
 		} else {
 			throw new AssertionError();
 		}
 	}
 
-	private void arrayAccessExpression(@NotNull ArrayAccessExpression node) throws IOException {
-		accessibleExpression(node.getAccessibleExpression());
-		appendable.append('[');
-		boolean comma = false;
+	private void arrayAccessExpression(@NotNull ArrayAccessExpression node, boolean parentheses) throws IOException {
+		accessibleExpression(node.getAccessibleExpression(), parentheses);
+		appender.append('[');
+		boolean separator = false;
 		for (final Expression expression : node.getExpressions()) {
-			if (comma) appendable.append(',');
-			expression(expression);
-			comma = true;
+			if (separator) appender.append("][");
+			expression(expression, false);
+			separator = true;
 		}
-		appendable.append(']');
+		appender.append(']');
 	}
 
-	private void memberAccessExpression(@NotNull MemberAccessExpression node) throws IOException {
-		accessibleExpression(node.getAccessibleExpression());
-		appendable.append('.').append(node.getIdentifier().getName());
+	private void memberAccessExpression(@NotNull MemberAccessExpression node, boolean parentheses) throws IOException {
+		accessibleExpression(node.getAccessibleExpression(), parentheses);
+		appender.append('.');
+		memberIdentifier(node.getIdentifier());
 	}
 
 
-	private void binaryExpression(@NotNull BinaryExpression node) throws IOException {
+	private void binaryExpression(@NotNull BinaryExpression node, boolean parentheses) throws IOException {
 		if (node instanceof ComparisonExpression) {
-			comparisonExpression((ComparisonExpression) node);
+			comparisonExpression((ComparisonExpression) node, parentheses);
 		} else if (node instanceof ShiftExpression) {
-			shiftExpression((ShiftExpression) node);
+			shiftExpression((ShiftExpression) node, parentheses);
 		} else if (node instanceof SimpleBinaryExpression) {
-			simpleBinaryExpression((SimpleBinaryExpression) node);
+			simpleBinaryExpression((SimpleBinaryExpression) node, parentheses);
 		} else {
 			throw new AssertionError();
 		}
 	}
 
-	private void comparisonExpression(@NotNull ComparisonExpression node) throws IOException {
-		appendable.append('(');
+	private void comparisonExpression(@NotNull ComparisonExpression node, boolean parentheses) throws IOException {
+		appender.append('(');
 		final NormalOperator operator = node.getOperator();
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
-			if (insert) appendable.append(operator.toString());
-			expression(operand);
+			if (insert) appender.append(' ').append(operator.toString()).append(' ');
+			expression(operand, parentheses);
 			insert = true;
 		}
-		appendable.append(')');
+		appender.append(')');
 	}
 
-	private void shiftExpression(@NotNull ShiftExpression node) throws IOException {
-		appendable.append('(');
+	private void shiftExpression(@NotNull ShiftExpression node, boolean parentheses) throws IOException {
+		appender.append('(');
 		final NormalOperator operator = node.getOperator();
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
-			if (insert) appendable.append(operator.toString());
-			expression(operand);
+			if (insert) appender.append(' ').append(operator.toString()).append(' ');
+			expression(operand, parentheses);
 			insert = true;
 		}
-		appendable.append(')');
+		appender.append(')');
 	}
 
-	private void simpleBinaryExpression(@NotNull SimpleBinaryExpression node) throws IOException {
-		appendable.append('(');
+	private void simpleBinaryExpression(@NotNull SimpleBinaryExpression node, boolean parentheses) throws IOException {
+		appender.append('(');
 		final NormalOperator operator = node.getOperator();
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
-			if (insert) appendable.append(operator.toString());
-			expression(operand);
+			if (insert) appender.append(' ').append(operator.toString()).append(' ');
+			expression(operand, parentheses);
 			insert = true;
 		}
-		appendable.append(')');
+		appender.append(')');
 	}
 
 	// =========================================
@@ -464,84 +485,90 @@ public class JavaTranslator {
 			case LOGIC_OR:
 				break;
 		}
-		assignableExpression(node.getAssignableExpression());
+		assignableExpression(node.getAssignableExpression(), false);
 
-		appendable.append(' ').append(assignmentOperator.toString()).append(' ');
-
-
+		appender.append(' ').append(assignmentOperator.toString()).append(' ');
+		expression(node.getExpression(), false);
+		appender.append(';');
 	}
 
 	private void blockStatement(@NotNull BlockStatement node) throws IOException {
-		appendable.append("{\n");
-		for (final Statement statement : node.getStatements()) {
-			statement(statement);
+		appender.append('{').newLine();
+		try (final Closeable ignored = appender.indent()) {
+			for (final Statement statement : node.getStatements()) {
+				statement(statement);
+				appender.newLine();
+			}
 		}
-		appendable.append('}');
+		appender.append('}');
 	}
 
 	private void breakStatement(@NotNull BreakStatement node) throws IOException {
 		final LabelIdentifier identifier = node.getLabelIdentifier();
 		if (identifier == null) {
-			appendable.append("break;\n");
+			appender.append("break;");
 		} else {
-			appendable.append("break ").append(identifier.getName()).append(";\n");
+			appender.append("break ");
+			labelIdentifier(identifier);
+			appender.append(";");
 		}
 	}
 
 	private void continueStatement(@NotNull ContinueStatement node) throws IOException {
 		final LabelIdentifier identifier = node.getLabelIdentifier();
 		if (identifier == null) {
-			appendable.append("continue;\n");
+			appender.append("continue;");
 		} else {
-			appendable.append("continue ").append(identifier.getName()).append(";\n");
+			appender.append("continue ");
+			labelIdentifier(identifier);
+			appender.append(";");
 		}
 	}
 
 	private void loopStatement(@NotNull LoopStatement node) throws IOException {
-		appendable.append("while (true) ");
+		appender.append("while (true) ");
 		if (node.getStatement() != null) {
 			statement(node.getStatement());
 		} else {
-			appendable.append(";\n");
+			appender.append(";");
 		}
 	}
 
 	private void functionCallStatement(@NotNull FunctionCallStatement node) throws IOException {
-		functionCallExpression(node.getFunctionCallExpression());
+		functionCallExpression(node.getFunctionCallExpression(), false);
 	}
 
 	private void ifStatement(@NotNull IfStatement node) throws IOException {
-		boolean first = true;
+		boolean separator = false;
 		for (final Pair<Expression, SingleStatement> pair : node.getConditionStatementPairs()) {
 			final Expression expression = pair.getOne();
 			final SingleStatement statement = pair.getTwo();
-			if (first) appendable.append("else ");
-			appendable.append("if (");
-			expression(expression);
-			appendable.append(") ");
+			if (separator) appender.append("else ");
+			appender.append("if (");
+			expression(expression, false);
+			appender.append(") ");
 			if (statement != null) {
 				statement(statement);
 			} else {
-				appendable.append(";\n");
+				appender.append(";");
 			}
-			first = false;
+			separator = true;
 		}
 		final SingleStatement alternativeStatement = node.getAlternativeStatement();
 		if (alternativeStatement != null) {
-			appendable.append("else ");
+			appender.append("else ");
 			statement(alternativeStatement);
-			appendable.append('\n');
 		}
 	}
 
 	private void returnStatement(@NotNull ReturnStatement node) throws IOException {
-		appendable.append("return");
+		appender.append("return");
 		final Expression expression = node.getExpression();
 		if (expression != null) {
-			appendable.append(' ');
-			expression(expression);
+			appender.append(' ');
+			expression(expression, false);
 		}
-		appendable.append(";\n");
+		appender.append(";");
 	}
 
 	// =========================================
@@ -560,26 +587,31 @@ public class JavaTranslator {
 
 	private void arrayType(@NotNull ArrayType type) throws IOException {
 		type(type.getInnerType());
-		appendable.append("[]");
+		/// without comments
+		// appendable.append("[]".repeat(type.getNumOfDimensions()));
+		final long[] dimensionSizes = type.getDimensionSizes();
+		for (long dimensionSize : dimensionSizes) {
+			appender.append("[/* ").append(String.valueOf(dimensionSize)).append(" */]");
+		}
 	}
 
 	private void tupleType(@NotNull TupleType type) throws IOException {
-		appendable.append(type.getIdentifier().getName());
+		tupleIdentifier(type.getIdentifier());
 	}
 
 	private void simpleType(@NotNull SimpleType type) throws IOException {
 		if (type == SimpleType.VOID) {
-			appendable.append("void");
+			appender.append("void");
 		} else if (type == SimpleType.BOOL) {
-			appendable.append("boolean");
+			appender.append("boolean");
 		} else if (type == SimpleType.NUMBER_U8 || type == SimpleType.NUMBER_I8) {
-			appendable.append("byte");
+			appender.append("byte");
 		} else if (type == SimpleType.NUMBER_U16 || type == SimpleType.NUMBER_I16) {
-			appendable.append("short");
+			appender.append("short");
 		} else if (type == SimpleType.NUMBER_U32 || type == SimpleType.NUMBER_I32) {
-			appendable.append("int");
+			appender.append("int");
 		} else if (type == SimpleType.NUMBER_U64 || type == SimpleType.NUMBER_I64) {
-			appendable.append("long");
+			appender.append("long");
 		}
 	}
 
