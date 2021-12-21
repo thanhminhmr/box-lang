@@ -144,7 +144,6 @@ public class JavaTranslator {
 	}
 
 	private void functionDefinition(@NotNull FunctionDefinition node) throws IOException {
-		appender.newLine().append("final ");
 		type(node.getReturnType());
 		appender.append(' ');
 		functionIdentifier(node.getIdentifier());
@@ -379,7 +378,7 @@ public class JavaTranslator {
 	}
 
 	private void comparisonExpression(@NotNull ComparisonExpression node, boolean parentheses) throws IOException {
-		appender.append('(');
+		if (parentheses) appender.append('(');
 		final NormalOperator operator = node.getOperator();
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
@@ -387,11 +386,11 @@ public class JavaTranslator {
 			expression(operand, parentheses);
 			insert = true;
 		}
-		appender.append(')');
+		if (parentheses) appender.append(')');
 	}
 
 	private void shiftExpression(@NotNull ShiftExpression node, boolean parentheses) throws IOException {
-		appender.append('(');
+		if (parentheses) appender.append('(');
 		final NormalOperator operator = node.getOperator();
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
@@ -399,11 +398,11 @@ public class JavaTranslator {
 			expression(operand, parentheses);
 			insert = true;
 		}
-		appender.append(')');
+		if (parentheses) appender.append(')');
 	}
 
 	private void simpleBinaryExpression(@NotNull SimpleBinaryExpression node, boolean parentheses) throws IOException {
-		appender.append('(');
+		if (parentheses) appender.append('(');
 		final NormalOperator operator = node.getOperator();
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
@@ -411,7 +410,7 @@ public class JavaTranslator {
 			expression(operand, parentheses);
 			insert = true;
 		}
-		appender.append(')');
+		if (parentheses) appender.append(')');
 	}
 
 	// =========================================
@@ -451,44 +450,23 @@ public class JavaTranslator {
 	}
 
 	private void assignmentStatement(@NotNull AssignmentStatement node) throws IOException {
-		// TODO
-		final AssignmentOperator assignmentOperator = node.getAssignmentOperator();
-		switch (assignmentOperator) {
-			case ASSIGN:
-				break;
-			case SHALLOW_CLONE:
-				break;
-			case ARITHMETIC_MULTIPLY:
-				break;
-			case ARITHMETIC_DIVIDE:
-				break;
-			case ARITHMETIC_MODULUS:
-				break;
-			case ARITHMETIC_ADD:
-				break;
-			case ARITHMETIC_SUBTRACT:
-				break;
-			case BIT_SHIFT_LEFT:
-				break;
-			case BIT_SHIFT_RIGHT:
-				break;
-			case BIT_AND:
-				break;
-			case BIT_XOR:
-				break;
-			case BIT_OR:
-				break;
-			case LOGIC_AND:
-				break;
-			case LOGIC_XOR:
-				break;
-			case LOGIC_OR:
-				break;
-		}
 		assignableExpression(node.getAssignableExpression(), false);
-
-		appender.append(' ').append(assignmentOperator.toString()).append(' ');
+		appender.append(' ');
+		final AssignmentOperator assignmentOperator = node.getAssignmentOperator();
+		if (assignmentOperator == AssignmentOperator.LOGIC_AND) {
+			appender.append(AssignmentOperator.BIT_AND.toString());
+		} else if (assignmentOperator == AssignmentOperator.LOGIC_XOR) {
+			appender.append(AssignmentOperator.BIT_XOR.toString());
+		} else if (assignmentOperator == AssignmentOperator.LOGIC_OR) {
+			appender.append(AssignmentOperator.BIT_OR.toString());
+		} else if (assignmentOperator == AssignmentOperator.SHALLOW_CLONE) {
+			appender.append(AssignmentOperator.ASSIGN.toString());
+		} else {
+			appender.append(assignmentOperator.toString());
+		}
+		appender.append(' ');
 		expression(node.getExpression(), false);
+		if (assignmentOperator == AssignmentOperator.SHALLOW_CLONE) appender.append(".clone()");
 		appender.append(';');
 	}
 

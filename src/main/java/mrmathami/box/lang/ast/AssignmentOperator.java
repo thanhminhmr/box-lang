@@ -25,7 +25,12 @@ import java.util.List;
 
 public enum AssignmentOperator {
 	ASSIGN("=", null),
+
+	/**
+	 * Shallow copy an array. Similar to Array::clone in Java.
+	 */
 	SHALLOW_CLONE(":=", null),
+
 	ARITHMETIC_MULTIPLY("*=", NormalOperator.ARITHMETIC_MULTIPLY),
 	ARITHMETIC_DIVIDE("/=", NormalOperator.ARITHMETIC_DIVIDE),
 	ARITHMETIC_MODULUS("%=", NormalOperator.ARITHMETIC_MODULUS),
@@ -33,9 +38,11 @@ public enum AssignmentOperator {
 	ARITHMETIC_SUBTRACT("-=", NormalOperator.ARITHMETIC_SUBTRACT),
 	BIT_SHIFT_LEFT("<<=", NormalOperator.BIT_SHIFT_LEFT),
 	BIT_SHIFT_RIGHT(">>=", NormalOperator.BIT_SHIFT_RIGHT),
+
 	BIT_AND("&=", NormalOperator.BIT_AND),
 	BIT_XOR("^=", NormalOperator.BIT_XOR),
 	BIT_OR("|=", NormalOperator.BIT_OR),
+
 	LOGIC_AND("&&=", NormalOperator.LOGIC_AND),
 	LOGIC_XOR("^^=", NormalOperator.LOGIC_OR),
 	LOGIC_OR("||=", NormalOperator.LOGIC_XOR);
