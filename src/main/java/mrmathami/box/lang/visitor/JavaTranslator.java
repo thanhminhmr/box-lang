@@ -18,43 +18,87 @@
 
 package mrmathami.box.lang.visitor;
 
-import mrmathami.box.lang.ast.*;
-import mrmathami.box.lang.ast.definition.*;
-import mrmathami.box.lang.ast.expression.*;
-import mrmathami.box.lang.ast.identifier.*;
-import mrmathami.box.lang.ast.statement.*;
+import mrmathami.box.lang.ast.AssignmentOperator;
+import mrmathami.box.lang.ast.CompilationUnit;
+import mrmathami.box.lang.ast.Keyword;
+import mrmathami.box.lang.ast.NormalOperator;
+import mrmathami.box.lang.ast.definition.Definition;
+import mrmathami.box.lang.ast.definition.FunctionDefinition;
+import mrmathami.box.lang.ast.definition.GlobalDefinition;
+import mrmathami.box.lang.ast.definition.LabelDefinition;
+import mrmathami.box.lang.ast.definition.MemberDefinition;
+import mrmathami.box.lang.ast.definition.ParameterDefinition;
+import mrmathami.box.lang.ast.definition.TupleDefinition;
+import mrmathami.box.lang.ast.definition.VariableDefinition;
+import mrmathami.box.lang.ast.expression.AccessExpression;
+import mrmathami.box.lang.ast.expression.AccessibleExpression;
+import mrmathami.box.lang.ast.expression.ArrayAccessExpression;
+import mrmathami.box.lang.ast.expression.ArrayCreationExpression;
+import mrmathami.box.lang.ast.expression.AssignableExpression;
+import mrmathami.box.lang.ast.expression.BinaryExpression;
+import mrmathami.box.lang.ast.expression.CastExpression;
+import mrmathami.box.lang.ast.expression.ComparisonExpression;
+import mrmathami.box.lang.ast.expression.ConditionalExpression;
+import mrmathami.box.lang.ast.expression.Expression;
+import mrmathami.box.lang.ast.expression.FunctionCallExpression;
+import mrmathami.box.lang.ast.expression.LiteralExpression;
+import mrmathami.box.lang.ast.expression.MemberAccessExpression;
+import mrmathami.box.lang.ast.expression.ParameterExpression;
+import mrmathami.box.lang.ast.expression.ShiftExpression;
+import mrmathami.box.lang.ast.expression.SimpleBinaryExpression;
+import mrmathami.box.lang.ast.expression.TupleCreationExpression;
+import mrmathami.box.lang.ast.expression.UnaryExpression;
+import mrmathami.box.lang.ast.expression.VariableExpression;
+import mrmathami.box.lang.ast.identifier.FunctionIdentifier;
+import mrmathami.box.lang.ast.identifier.Identifier;
+import mrmathami.box.lang.ast.identifier.LabelIdentifier;
+import mrmathami.box.lang.ast.identifier.MemberIdentifier;
+import mrmathami.box.lang.ast.identifier.ParameterIdentifier;
+import mrmathami.box.lang.ast.identifier.TupleIdentifier;
+import mrmathami.box.lang.ast.identifier.VariableIdentifier;
+import mrmathami.box.lang.ast.statement.AssignmentStatement;
+import mrmathami.box.lang.ast.statement.BlockStatement;
+import mrmathami.box.lang.ast.statement.BreakStatement;
+import mrmathami.box.lang.ast.statement.ContinueStatement;
+import mrmathami.box.lang.ast.statement.FunctionCallStatement;
+import mrmathami.box.lang.ast.statement.IfStatement;
+import mrmathami.box.lang.ast.statement.LoopStatement;
+import mrmathami.box.lang.ast.statement.ReturnStatement;
+import mrmathami.box.lang.ast.statement.SingleStatement;
+import mrmathami.box.lang.ast.statement.Statement;
 import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.TupleType;
 import mrmathami.box.lang.ast.type.Type;
-import mrmathami.box.lang.parser.Builder;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CodePointCharStream;
 import org.eclipse.collections.api.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 public class JavaTranslator {
 	private final @NotNull IndentAppender appender;
+	private final @NotNull String name;
 
 
-	public JavaTranslator(@NotNull Appendable appendable) {
+	private JavaTranslator(@NotNull Appendable appendable, @NotNull String name) {
+		if (!name.matches("[A-Za-z][0-9A-Za-z]*")) {
+			throw new IllegalArgumentException("Name must be a valid Java class name!");
+		}
 		this.appender = new IndentAppender(appendable);
+		this.name = name;
 	}
 
-	public void fromCompilationUnit(@NotNull CompilationUnit compilationUnit)
-			throws VisitorException, IOException {
-		new JavaTranslator(appender).compilationUnit(compilationUnit);
+	public static void fromCompilationUnit(@NotNull Appendable appendable,
+			@NotNull String name, @NotNull CompilationUnit compilationUnit) throws IOException {
+		new JavaTranslator(appendable, name).compilationUnit(compilationUnit);
 	}
 
+	// =========================================
 
-	public void compilationUnit(@NotNull CompilationUnit compilationUnit) throws IOException {
-		appender.append("public final class JavaTranslatedBox {");
+	private void compilationUnit(@NotNull CompilationUnit compilationUnit) throws IOException {
+		appender.append("public final class ").append(name).append(" {").newLine();
 		try (final Closeable ignored = appender.indent()) {
 			for (final GlobalDefinition globalDefinition : compilationUnit.getDefinitions()) {
 				globalDefinition(globalDefinition);
@@ -63,23 +107,6 @@ public class JavaTranslator {
 		}
 		appender.append("}").newLine();
 	}
-
-
-	// =========================================
-
-
-	public static void main(@NotNull String[] strings) throws IOException, InvalidASTException {
-		final String string = Files.readString(Path.of("./test/input.txt"));
-		final CodePointCharStream charStream = CharStreams.fromString(string);
-
-//		final StringBuilder builder = new StringBuilder();
-		final CompilationUnit compilationUnit = Builder.build(charStream);
-//		final JavaTranslator translator = new JavaTranslator(builder);
-		final JavaTranslator translator = new JavaTranslator(System.out);
-		translator.compilationUnit(compilationUnit);
-//		System.out.println(builder);
-	}
-
 
 	// =========================================
 
@@ -156,7 +183,6 @@ public class JavaTranslator {
 		}
 		appender.append(") ");
 		blockStatement(node.getBody());
-		appender.newLine();
 	}
 
 	private void parameterDefinition(@NotNull ParameterDefinition node) throws IOException {
@@ -383,7 +409,7 @@ public class JavaTranslator {
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
 			if (insert) appender.append(' ').append(operator.toString()).append(' ');
-			expression(operand, parentheses);
+			expression(operand, true);
 			insert = true;
 		}
 		if (parentheses) appender.append(')');
@@ -395,7 +421,7 @@ public class JavaTranslator {
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
 			if (insert) appender.append(' ').append(operator.toString()).append(' ');
-			expression(operand, parentheses);
+			expression(operand, true);
 			insert = true;
 		}
 		if (parentheses) appender.append(')');
@@ -407,7 +433,7 @@ public class JavaTranslator {
 		boolean insert = false;
 		for (final Expression operand : node.getOperands()) {
 			if (insert) appender.append(' ').append(operator.toString()).append(' ');
-			expression(operand, parentheses);
+			expression(operand, true);
 			insert = true;
 		}
 		if (parentheses) appender.append(')');
@@ -514,6 +540,7 @@ public class JavaTranslator {
 
 	private void functionCallStatement(@NotNull FunctionCallStatement node) throws IOException {
 		functionCallExpression(node.getFunctionCallExpression(), false);
+		appender.append(';');
 	}
 
 	private void ifStatement(@NotNull IfStatement node) throws IOException {
@@ -569,7 +596,11 @@ public class JavaTranslator {
 		// appendable.append("[]".repeat(type.getNumOfDimensions()));
 		final long[] dimensionSizes = type.getDimensionSizes();
 		for (long dimensionSize : dimensionSizes) {
-			appender.append("[/* ").append(String.valueOf(dimensionSize)).append(" */]");
+			if (dimensionSize >= 0) {
+				appender.append("[/* ").append(String.valueOf(dimensionSize)).append(" */]");
+			} else {
+				appender.append("[]");
+			}
 		}
 	}
 
@@ -591,11 +622,5 @@ public class JavaTranslator {
 		} else if (type == SimpleType.NUMBER_U64 || type == SimpleType.NUMBER_I64) {
 			appender.append("long");
 		}
-	}
-
-	// =========================================
-
-	public int leave(@NotNull AstNode node) throws VisitorException {
-		return 0;
 	}
 }

@@ -13,42 +13,49 @@ Tuple _run(){}
 
 
 u32 _fibonacci(u32 $index) {
-    return $index == 0i
-            ? 0i
-            : $index == 1i
-            ? 1i
-            : _fibonacci($index - 1i) + _fibonacci($index - 2i);
+	return $index == 0i
+			? 0i
+			: $index == 1i
+			? 1i
+			: _fibonacci($index - 1i) + _fibonacci($index - 2i);
+}
+
+u32 _fibonacci2(u32 $index) {
+	if ($index == 0i) return 0i;
+	if ($index == 1i) return 1i;
+	return _fibonacci2($index - 1i)
+		+ _fibonacci2($index - 2i);
 }
 
 u32 _fibonacciLoop(u32 $index) {
-    if ($index == 0i) return 0i;
-    if ($index == 1i) return 1i;
-    u32 i = 1i;
-    u32 a = 0i;
-    u32 b = 1i;
-    loop {
-        u32 c = a + b;
-        a = b;
-        b = c;
-    	i += 1i;
-        if (i == $index) return b;
-    }
+	if ($index == 0i) return 0i;
+	if ($index == 1i) return 1i;
+	u32 i = 1i;
+	u32 a = 0i;
+	u32 b = 1i;
+	loop {
+		u32 c = a + b;
+		a = b;
+		b = c;
+		i += 1i;
+		if (i == $index) return b;
+	}
 }
 
 u32[] _fibonacciArray(u32 $size) {
-    u32[] array = u32:[$size]; // init to zero
-    if ($size <= 1i) return array;
-    u32 i = 1i;
-    u32 a = 0i;
-    u32 b = 1i;
-    loop {
-    	array[i] = b;
-    	u32 c = a + b;
-    	a = b;
-    	b = c;
-    	i += 1i;
-        if (i == $size) return array;
-    }
+	u32[] array = u32:[$size]; // init to zero
+	if ($size <= 1i) return array;
+	u32 i = 1i;
+	u32 a = 0i;
+	u32 b = 1i;
+	loop {
+		array[i] = b;
+		u32 c = a + b;
+		a = b;
+		b = c;
+		i += 1i;
+		if (i == $size) return array;
+	}
 }
 
 u32[] _test() {
@@ -58,4 +65,38 @@ u32[] _test() {
 			break @first;
 		}
 	}
+}
+
+u64[] _sort(u64[] $A, u32 $length) {
+	u64[] clonedArray = u64:[$length];
+	clonedArray := $A;
+	_quickSort(clonedArray, 0i, $length - 1i);
+	return clonedArray;
+}
+
+void _quickSort(u64[] $A, u32 $m, u32 $n) {
+	if ($m >= $n) return;
+	u32 p = _partition($A, $m, $n);
+	_quickSort($A, $m, p - 1i);
+	_quickSort($A, p, $n);
+}
+
+u32 _partition(u64[] $A, u32 $m, u32 $n) {
+	u64 p = $A[$n];
+	u32 i = $m - 1i;
+	u32 j = $n;
+	loop {
+		if ($A[j] <= p) {
+			i += 1i;
+			u64 t = $A[i];
+			$A[i] = $A[j];
+			$A[j] = t;
+		}
+		j += 1i;
+		if (j > $n) break;
+	}
+	u64 t = $A[i];
+	$A[i] = $A[$n];
+	$A[$n] = t;
+	return i;
 }
