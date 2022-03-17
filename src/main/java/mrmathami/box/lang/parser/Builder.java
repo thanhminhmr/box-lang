@@ -20,117 +20,17 @@ package mrmathami.box.lang.parser;
 
 import mrmathami.box.lang.BoxLangLexer;
 import mrmathami.box.lang.BoxLangParser;
-import mrmathami.box.lang.BoxLangParser.AccessExpressionContext;
-import mrmathami.box.lang.BoxLangParser.AccessSuffixContext;
-import mrmathami.box.lang.BoxLangParser.AddExpressionContext;
-import mrmathami.box.lang.BoxLangParser.AndAndExpressionContext;
-import mrmathami.box.lang.BoxLangParser.AndExpressionContext;
-import mrmathami.box.lang.BoxLangParser.ArrayCreationExpressionContext;
-import mrmathami.box.lang.BoxLangParser.ArraySizeLiteralContext;
-import mrmathami.box.lang.BoxLangParser.ArraySuffixContext;
-import mrmathami.box.lang.BoxLangParser.ArrayTypeContext;
-import mrmathami.box.lang.BoxLangParser.AssignableExpressionContext;
-import mrmathami.box.lang.BoxLangParser.AssignmentStatementContext;
-import mrmathami.box.lang.BoxLangParser.BeforeAndAndExpressionContext;
-import mrmathami.box.lang.BoxLangParser.BeforeAndExpressionContext;
-import mrmathami.box.lang.BoxLangParser.BeforeArrayTypeContext;
-import mrmathami.box.lang.BoxLangParser.BeforeOrExpressionContext;
-import mrmathami.box.lang.BoxLangParser.BeforeOrOrExpressionContext;
-import mrmathami.box.lang.BoxLangParser.BeforeXorExpressionContext;
-import mrmathami.box.lang.BoxLangParser.BeforeXorXorExpressionContext;
-import mrmathami.box.lang.BoxLangParser.BlockStatementContext;
-import mrmathami.box.lang.BoxLangParser.BreakStatementContext;
-import mrmathami.box.lang.BoxLangParser.CastExpressionContext;
-import mrmathami.box.lang.BoxLangParser.ComparisonExpressionContext;
-import mrmathami.box.lang.BoxLangParser.CompilationUnitContext;
-import mrmathami.box.lang.BoxLangParser.ConditionalExpressionContext;
-import mrmathami.box.lang.BoxLangParser.ContinueStatementContext;
-import mrmathami.box.lang.BoxLangParser.ExpressionContext;
-import mrmathami.box.lang.BoxLangParser.ExpressionListContext;
-import mrmathami.box.lang.BoxLangParser.FunctionCallExpressionContext;
-import mrmathami.box.lang.BoxLangParser.FunctionCallStatementContext;
-import mrmathami.box.lang.BoxLangParser.FunctionDefinitionContext;
-import mrmathami.box.lang.BoxLangParser.GlobalDefinitionContext;
-import mrmathami.box.lang.BoxLangParser.IfStatementContext;
-import mrmathami.box.lang.BoxLangParser.LabelDefinitionContext;
-import mrmathami.box.lang.BoxLangParser.LiteralExpressionContext;
-import mrmathami.box.lang.BoxLangParser.LoopStatementContext;
-import mrmathami.box.lang.BoxLangParser.MultiplyExpressionContext;
-import mrmathami.box.lang.BoxLangParser.NegativeExpressionContext;
-import mrmathami.box.lang.BoxLangParser.NotExpressionContext;
-import mrmathami.box.lang.BoxLangParser.OrExpressionContext;
-import mrmathami.box.lang.BoxLangParser.OrOrExpressionContext;
-import mrmathami.box.lang.BoxLangParser.ParameterDefinitionContext;
-import mrmathami.box.lang.BoxLangParser.ParenthesesExpressionContext;
-import mrmathami.box.lang.BoxLangParser.ReturnStatementContext;
-import mrmathami.box.lang.BoxLangParser.ShiftExpressionContext;
-import mrmathami.box.lang.BoxLangParser.SignExpressionContext;
-import mrmathami.box.lang.BoxLangParser.SimpleTypeContext;
-import mrmathami.box.lang.BoxLangParser.SingleStatementContext;
-import mrmathami.box.lang.BoxLangParser.StatementContext;
-import mrmathami.box.lang.BoxLangParser.TupleCreationExpressionContext;
-import mrmathami.box.lang.BoxLangParser.TupleDefinitionContext;
-import mrmathami.box.lang.BoxLangParser.TupleTypeContext;
-import mrmathami.box.lang.BoxLangParser.TypeContext;
-import mrmathami.box.lang.BoxLangParser.VariableDefinitionContext;
-import mrmathami.box.lang.BoxLangParser.VariableExpressionContext;
-import mrmathami.box.lang.BoxLangParser.XorExpressionContext;
-import mrmathami.box.lang.BoxLangParser.XorXorExpressionContext;
-import mrmathami.box.lang.ast.AssignmentOperator;
-import mrmathami.box.lang.ast.CompilationUnit;
-import mrmathami.box.lang.ast.InvalidASTException;
-import mrmathami.box.lang.ast.Keyword;
-import mrmathami.box.lang.ast.NormalOperator;
-import mrmathami.box.lang.ast.definition.Definition;
-import mrmathami.box.lang.ast.definition.FunctionDefinition;
-import mrmathami.box.lang.ast.definition.GlobalDefinition;
-import mrmathami.box.lang.ast.definition.LabelDefinition;
-import mrmathami.box.lang.ast.definition.MemberDefinition;
-import mrmathami.box.lang.ast.definition.ParameterDefinition;
-import mrmathami.box.lang.ast.definition.TupleDefinition;
-import mrmathami.box.lang.ast.definition.VariableDefinition;
-import mrmathami.box.lang.ast.expression.AccessExpression;
-import mrmathami.box.lang.ast.expression.AccessibleExpression;
-import mrmathami.box.lang.ast.expression.ArrayAccessExpression;
-import mrmathami.box.lang.ast.expression.ArrayCreationExpression;
-import mrmathami.box.lang.ast.expression.AssignableExpression;
-import mrmathami.box.lang.ast.expression.CastExpression;
-import mrmathami.box.lang.ast.expression.ComparisonExpression;
-import mrmathami.box.lang.ast.expression.ConditionalExpression;
-import mrmathami.box.lang.ast.expression.Expression;
-import mrmathami.box.lang.ast.expression.FunctionCallExpression;
-import mrmathami.box.lang.ast.expression.LiteralExpression;
-import mrmathami.box.lang.ast.expression.MemberAccessExpression;
-import mrmathami.box.lang.ast.expression.ParameterExpression;
-import mrmathami.box.lang.ast.expression.ShiftExpression;
-import mrmathami.box.lang.ast.expression.SimpleBinaryExpression;
-import mrmathami.box.lang.ast.expression.TupleCreationExpression;
-import mrmathami.box.lang.ast.expression.UnaryExpression;
-import mrmathami.box.lang.ast.expression.VariableExpression;
-import mrmathami.box.lang.ast.identifier.FunctionIdentifier;
-import mrmathami.box.lang.ast.identifier.Identifier;
-import mrmathami.box.lang.ast.identifier.LabelIdentifier;
-import mrmathami.box.lang.ast.identifier.MemberIdentifier;
-import mrmathami.box.lang.ast.identifier.ParameterIdentifier;
-import mrmathami.box.lang.ast.identifier.TupleIdentifier;
-import mrmathami.box.lang.ast.identifier.VariableIdentifier;
-import mrmathami.box.lang.ast.statement.AssignmentStatement;
-import mrmathami.box.lang.ast.statement.BlockStatement;
-import mrmathami.box.lang.ast.statement.BreakStatement;
-import mrmathami.box.lang.ast.statement.ContinueStatement;
-import mrmathami.box.lang.ast.statement.FunctionCallStatement;
-import mrmathami.box.lang.ast.statement.IfStatement;
-import mrmathami.box.lang.ast.statement.LoopStatement;
-import mrmathami.box.lang.ast.statement.ReturnStatement;
-import mrmathami.box.lang.ast.statement.SingleStatement;
-import mrmathami.box.lang.ast.statement.Statement;
+import mrmathami.box.lang.BoxLangParser.*;
+import mrmathami.box.lang.ast.*;
+import mrmathami.box.lang.ast.definition.*;
+import mrmathami.box.lang.ast.expression.*;
+import mrmathami.box.lang.ast.identifier.*;
+import mrmathami.box.lang.ast.statement.*;
 import mrmathami.box.lang.ast.type.ArrayType;
 import mrmathami.box.lang.ast.type.SimpleType;
 import mrmathami.box.lang.ast.type.TupleType;
 import mrmathami.box.lang.ast.type.Type;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -142,23 +42,12 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiFunction;
 
-import static mrmathami.box.lang.BoxLangParser.AccessibleExpressionContext;
-import static mrmathami.box.lang.BoxLangParser.MemberDefinitionContext;
-import static mrmathami.box.lang.BoxLangParser.ParameterExpressionContext;
+import static mrmathami.box.lang.BoxLangParser.*;
 
-public class Builder implements AutoCloseable {
+public final class Builder implements AutoCloseable {
 	private static final @NotNull BigInteger SIGNER_I8 = new BigInteger("-100", 16);
 	private static final @NotNull BigInteger SIGNER_I16 = new BigInteger("-10000", 16);
 	private static final @NotNull BigInteger SIGNER_I32 = new BigInteger("-100000000", 16);
@@ -171,7 +60,7 @@ public class Builder implements AutoCloseable {
 	private final @NotNull List<@NotNull Identifier> Identifiers = new ArrayList<>();
 	private final Map<@NotNull String, @NotNull Definition> definitions = new HashMap<>();
 
-	public Builder() {
+	private Builder() {
 		this.parentBuilder = null;
 		this.members = new ArrayList<>();
 	}
@@ -181,10 +70,16 @@ public class Builder implements AutoCloseable {
 		this.members = parentBuilder.members;
 	}
 
-//	@NotNull
-//	private static <A, B, C> Pair<A, B> newPair(@Nullable C any) {
-//		return Pair.mutableOf(null, null);
-//	}
+	public static @NotNull CompilationUnit build(@NotNull CharStream charStream) throws InvalidASTException {
+		final BoxLangLexer lexer = new BoxLangLexer(charStream);
+
+		final CommonTokenStream tokens = new CommonTokenStream(lexer);
+		final BoxLangParser parser = new BoxLangParser(tokens);
+
+		try (final Builder builder = new Builder()) {
+			return builder.compilationUnit(parser.compilationUnit());
+		}
+	}
 
 	//region resolver
 
@@ -221,6 +116,8 @@ public class Builder implements AutoCloseable {
 				}
 			}
 		}
+		// TODO: check for valid tree: AssignmentStatement, IfStatement
+		// TODO: check for return on all path: FunctionDefinition
 	}
 
 	private @Nullable Definition lookupDefinition(@NotNull String name) {
@@ -677,11 +574,12 @@ public class Builder implements AutoCloseable {
 		if (memberIdentifier != null) {
 			final MemberIdentifier identifier = memberIdentifier(memberIdentifier);
 			return newMember(new MemberAccessExpression(accessibleExpression, identifier));
+		} else {
+			final List<ExpressionContext> expressionContexts = context.expressionList().expression();
+			final List<Expression> expressions = miscParseExpressions(
+					new ArrayList<>(expressionContexts.size()), expressionContexts);
+			return new ArrayAccessExpression(accessibleExpression, expressions);
 		}
-		final List<ExpressionContext> expressionContexts = context.expressionList().expression();
-		final List<Expression> expressions = miscParseExpressions(
-				new ArrayList<>(expressionContexts.size()), expressionContexts);
-		return new ArrayAccessExpression(accessibleExpression, expressions);
 	}
 
 	private @NotNull AccessExpression accessExpression(@NotNull AccessExpressionContext context)
@@ -990,29 +888,15 @@ public class Builder implements AutoCloseable {
 
 	//endregion parsed context processor
 
-	//region
-
-
-	//endregion
-
 	private static @NotNull RuntimeException up() {
 		return new RuntimeException("This should not happen!");
 	}
 
 	public static void main(@NotNull String[] args) throws IOException, InvalidASTException {
 		final String string = Files.readString(Path.of("./test/input.txt"));
-		final BoxLangLexer lexer = new BoxLangLexer(CharStreams.fromString(string));
+		final CodePointCharStream charStream = CharStreams.fromString(string);
 
-		final CommonTokenStream tokens = new CommonTokenStream(lexer);
-		final BoxLangParser parser = new BoxLangParser(tokens);
-//		final ParseTree tree = parser.compilationUnit();
-//
-//		System.out.println(tree);
-
-		final CompilationUnit compilationUnit;
-		try (final Builder builder = new Builder()) {
-			compilationUnit = builder.compilationUnit(parser.compilationUnit());
-		}
+		final CompilationUnit compilationUnit = Builder.build(charStream);
 		System.out.println(compilationUnit);
 	}
 }

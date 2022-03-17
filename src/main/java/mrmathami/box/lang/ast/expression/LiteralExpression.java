@@ -48,13 +48,11 @@ public final class LiteralExpression implements Expression {
 		return type;
 	}
 
-	public @NotNull BigInteger getNumber() {
-		assert number != null;
+	public @Nullable BigInteger getNumber() {
 		return number;
 	}
 
-	public @NotNull Keyword getKeyword() {
-		assert keyword != null;
+	public @Nullable Keyword getKeyword() {
 		return keyword;
 	}
 }

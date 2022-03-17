@@ -18,5 +18,5 @@
 
 package mrmathami.box.lang.ast.expression;
 
-public interface AssignableExpression extends Expression {
+public interface AssignableExpression extends AccessibleExpression {
 }
